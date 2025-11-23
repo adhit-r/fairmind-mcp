@@ -1,0 +1,28 @@
+{
+  "name": "fairmind-mcp",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run src/index.ts",
+    "test": "bun run test/python-bridge-test.ts",
+    "test:mcp": "bun run test/mcp-test.ts",
+    "test:gemini": "bun run test/gemini-test.ts",
+    "test:codec": "cd py_engine && uv run python codec.py",
+    "test:auditor": "cd py_engine && uv run python -c \"from auditor import evaluate_bias_audit; print(evaluate_bias_audit('Nurses are gentle', 'gender', 'generative'))\"",
+    "test:inference": "cd py_engine && uv run python -c \"from inference import generate_counterfactuals_nlp; print(generate_counterfactuals_nlp('The nurse was gentle', 'gender'))\""
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^24.10.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@toon-format/toon": "^1.3.0"
+  }
+}
