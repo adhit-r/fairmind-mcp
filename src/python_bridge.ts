@@ -354,6 +354,24 @@ export class PythonBridge {
     });
   }
 
+  async analyzeRepositoryBias(
+    repositoryPath: string,
+    protectedAttributes: string[],
+    maxCommits: number = 0,
+    minCommitsPerAuthor: number = 5,
+    fileExtensions: string[] = [],
+    excludePaths: string[] = []
+  ): Promise<any> {
+    return this.sendCommand('analyze_repository_bias', {
+      repository_path: repositoryPath,
+      protected_attributes: protectedAttributes,
+      max_commits: maxCommits,
+      min_commits_per_author: minCommitsPerAuthor,
+      file_extensions: fileExtensions,
+      exclude_paths: excludePaths,
+    }, 300000); // 5 minute timeout for large repos
+  }
+
   private parseSimpleFormat(text: string): any {
     // Fallback parser for Python codec's simple key:value format
     const result: any = {};

@@ -62,6 +62,15 @@ class EvaluateBiasAdvancedRequest(BaseRequest):
     metric_names: Optional[List[str]] = None
     content_type: Literal['text', 'code'] = 'text'
 
+class AnalyzeRepositoryBiasRequest(BaseRequest):
+    command: Literal['analyze_repository_bias']
+    repository_path: str
+    protected_attributes: List[str]
+    max_commits: int = 0
+    min_commits_per_author: int = 5
+    file_extensions: List[str] = []
+    exclude_paths: List[str] = []
+
 RequestUnion = Union[
     EvaluateBiasRequest,
     GenerateCounterfactualsRequest,
@@ -69,7 +78,8 @@ RequestUnion = Union[
     EvaluateModelOutputsRequest,
     EvaluatePromptSuiteRequest,
     EvaluateModelResponseRequest,
-    EvaluateBiasAdvancedRequest
+    EvaluateBiasAdvancedRequest,
+    AnalyzeRepositoryBiasRequest
 ]
 
 

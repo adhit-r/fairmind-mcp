@@ -14,6 +14,7 @@ from tools.compare_code_bias import handle_compare_code_bias
 from tools.evaluate_model_outputs import handle_evaluate_model_outputs
 from tools.evaluate_prompt_suite import handle_evaluate_prompt_suite
 from tools.evaluate_model_response import handle_evaluate_model_response
+from tools.analyze_repository_bias import handle_analyze_repository_bias
 
 # Registry mapping command names to handler functions
 TOOL_HANDLERS: Dict[str, Callable[[Any], Dict[str, Any]]] = {
@@ -24,6 +25,7 @@ TOOL_HANDLERS: Dict[str, Callable[[Any], Dict[str, Any]]] = {
     'evaluate_model_outputs': handle_evaluate_model_outputs,
     'evaluate_prompt_suite': handle_evaluate_prompt_suite,
     'evaluate_model_response': handle_evaluate_model_response,
+    'analyze_repository_bias': handle_analyze_repository_bias,
 }
 
 

@@ -14,6 +14,7 @@ import { compareCodeBiasTool, handleCompareCodeBias } from './compare_code_bias.
 import { evaluateModelOutputsTool, handleEvaluateModelOutputs } from './evaluate_model_outputs.js';
 import { evaluatePromptSuiteTool, handleEvaluatePromptSuite } from './evaluate_prompt_suite.js';
 import { evaluateModelResponseTool, handleEvaluateModelResponse } from './evaluate_model_response.js';
+import { analyzeRepositoryBiasTool, handleAnalyzeRepositoryBias } from './analyze_repository_bias.js';
 
 export interface ToolHandler {
   tool: Tool;
@@ -28,6 +29,7 @@ export const TOOLS: ToolHandler[] = [
   { tool: evaluateModelOutputsTool, handler: handleEvaluateModelOutputs },
   { tool: evaluatePromptSuiteTool, handler: handleEvaluatePromptSuite },
   { tool: evaluateModelResponseTool, handler: handleEvaluateModelResponse },
+  { tool: analyzeRepositoryBiasTool, handler: handleAnalyzeRepositoryBias },
 ];
 
 export function getAllTools(): Tool[] {
