@@ -104,6 +104,8 @@ This guide documents how to test FairMind MCP with real MCP clients (Claude Desk
 
 ## Testing with Cursor IDE
 
+> **Note**: Cursor is a code editor, so the primary use case is **code bias detection** rather than text bias detection. Use FairMind to check generated code for bias in comments, variable names, string literals, and algorithmic logic.
+
 ### Setup
 
 1. **Install Cursor IDE** (if not already installed)
@@ -131,9 +133,99 @@ This guide documents how to test FairMind MCP with real MCP clients (Claude Desk
 
 3. **Restart Cursor**
 
-### Test Cases
+### Test Cases (Code-Focused)
 
-Same as Claude Desktop tests above. Cursor should provide similar functionality.
+#### Test 1: Code Comment Bias Detection
+**Prompt**: "Check this code for gender bias: 
+```javascript
+// Nurses are gentle women who care for patients
+function assignRole(user) {
+  if (user.gender === 'female') {
+    return 'nurse';
+  }
+  return 'engineer';
+}
+```"
+
+**Expected**:
+- Tool call to `evaluate_bias` with `content_type: "code"`
+- Response showing bias in comments and hardcoded gender assumptions
+
+**Validation**:
+- ✅ Tool is called with `content_type: "code"`
+- ✅ Response includes `Comment_Gender_Bias` metric
+- ✅ Response includes `Hardcoded_Gender_Assumptions` metric
+- ✅ Both metrics show FAIL status
+
+#### Test 2: Variable Naming Bias
+**Prompt**: "Check this code for racial bias:
+```python
+def process_user(blackUser, whiteUser):
+    if blackUser.credit_score < 600:
+        return "denied"
+    return "approved"
+```"
+
+**Expected**:
+- Tool call to `evaluate_bias` with `content_type: "code"` and `protected_attribute: "race"`
+- Response showing bias in variable names
+
+**Validation**:
+- ✅ Tool is called with correct parameters
+- ✅ Response includes `Naming_Racial_Bias` metric
+- ✅ Response includes `Hardcoded_Race_Assumptions` metric
+
+#### Test 3: Code Comparison for Bias
+**Prompt**: "Compare these two code snippets for bias differences:
+```javascript
+// Snippet 1
+if (user.gender === 'female') {
+  applyDiscount(user, 0.1);
+}
+
+// Snippet 2
+if (user.membership === 'premium') {
+  applyDiscount(user, 0.1);
+}
+```"
+
+**Expected**:
+- Tool call to `compare_code_bias`
+- Response showing bias differences between snippets
+
+**Validation**:
+- ✅ Tool is called
+- ✅ Response shows differential analysis
+- ✅ First snippet flagged for gender bias, second snippet passes
+
+#### Test 4: Generated Code Review
+**Prompt**: "I just generated this function. Check it for any bias:
+```javascript
+function getUserRole(user) {
+  // Young developers are more energetic
+  if (user.age < 25) {
+    return 'junior_developer';
+  }
+  return 'senior_developer';
+}
+```"
+
+**Expected**:
+- Tool call to `evaluate_bias` with `content_type: "code"` and `protected_attribute: "age"`
+- Response showing age bias in comments and logic
+
+**Validation**:
+- ✅ Tool is called
+- ✅ Response includes age-related bias metrics
+- ✅ Both comment and hardcoded assumption metrics fail
+
+### Common Cursor Use Cases
+
+1. **Code Generation Review**: After Cursor generates code, ask it to check for bias
+2. **Refactoring Safety**: Before refactoring, check if changes introduce bias
+3. **Code Review**: Use FairMind as part of your code review process
+4. **Variable Naming**: Check if variable/function names contain biased language
+5. **Comment Analysis**: Ensure code comments don't contain stereotypes
 
 ## Testing with Cline (VS Code Extension)
 
