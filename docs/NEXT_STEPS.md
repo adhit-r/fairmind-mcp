@@ -1,138 +1,165 @@
-# FairMind MCP - Next Steps Roadmap
+# FairMind MCP - Next Steps & Priorities
 
-## ✅ Completed
-- [x] MCP server implementation (TypeScript/Bun)
-- [x] Python analysis kernel (Fairlearn/AIF360)
-- [x] TOON codec for token efficiency
-- [x] LiteRT integration (with fallback)
-- [x] Test suite (Python bridge + Gemini API)
-- [x] Documentation (README, TESTING, QUICKSTART)
-- [x] Private GitHub repository created
+## ✅ Recently Completed
 
-## 🚀 Immediate Next Steps (Priority Order)
+- [x] Performance benchmarking suite
+- [x] TOON encoding optimization for large payloads
+- [x] Warm-up functionality to eliminate first-request penalty
+- [x] Real-world testing documentation (Claude Desktop, Cursor, Cline)
+- [x] Repository-wide bias analysis with author scorecards
+- [x] Responsible use guidelines
 
-### 1. End-to-End Testing & Validation
+## 🎯 Immediate Priorities (This Week)
+
+### 1. Test Repository Analysis Feature ⚡
 **Priority: HIGH**
 
-- [ ] Test with actual MCP clients (Claude Desktop, Cline, Cursor)
-- [ ] Validate TOON format token savings vs JSON
-- [ ] Performance benchmarking (latency, throughput)
-- [ ] Error handling and edge case testing
+The repository analysis tool is built but untested. Let's validate it works:
 
-**Commands:**
 ```bash
-# Test with Gemini
-export GEMINI_API_KEY=your_key
-bun run test:gemini
-
-# Test Python components
-bun run test:auditor
-bun run test:inference
+# Test on a small repo first
+# Use the tool to analyze fairmind-mcp itself
 ```
 
-### 2. CI/CD Pipeline Setup
+**Tasks:**
+- [ ] Test `analyze_repository_bias` on a small test repo
+- [ ] Verify git parsing works correctly
+- [ ] Check author scorecard generation
+- [ ] Validate performance on medium-sized repo
+- [ ] Fix any bugs discovered
+
+**Why:** We just built a major feature - need to ensure it works before moving on.
+
+### 2. Real-World Testing with MCP Clients 🧪
 **Priority: HIGH**
 
-- [ ] GitHub Actions workflow for automated testing
-- [ ] Python environment setup in CI
-- [ ] TypeScript/Bun build verification
-- [ ] Automated test runs on PRs
+We have documentation but haven't actually tested end-to-end:
 
-**Create:** `.github/workflows/test.yml`
+**Tasks:**
+- [ ] Test with Claude Desktop (already configured)
+- [ ] Test with Cursor (already configured)
+- [ ] Validate all tools work through MCP
+- [ ] Document any issues found
+- [ ] Create example prompts that work well
 
-### 3. MCP Client Integration Examples
+**Why:** Core functionality - need to ensure it works in real scenarios.
+
+### 3. Improve Repository Analyzer Performance 🚀
 **Priority: MEDIUM**
 
-- [ ] Claude Desktop configuration example
-- [ ] Cline/Cursor setup guide
-- [ ] Example prompts showing agent usage
-- [ ] Video/screenshot walkthrough
+Current implementation may be slow on large repos:
 
-**Create:** `docs/INTEGRATION.md`
+**Tasks:**
+- [ ] Add progress reporting for long-running analyses
+- [ ] Optimize git command execution
+- [ ] Add caching for repeated analyses
+- [ ] Implement incremental analysis (analyze only new commits)
+- [ ] Add parallel processing for commit analysis
 
-### 4. Enhanced Features (From PRD)
+**Why:** Large repos (1000s of commits) will be slow without optimization.
+
+## 📋 Short-Term Goals (Next 2 Weeks)
+
+### 4. Add Anonymization Feature 🔒
 **Priority: MEDIUM**
 
-- [ ] Full Fairlearn MetricFrame integration (currently MVP)
-- [ ] AIF360 ClassificationMetric support
-- [ ] Actual LiteRT model loading (download/convert models)
-- [ ] Multi-attribute bias detection
-- [ ] Batch processing support
+Address privacy concerns from responsible use guidelines:
 
-### 5. Production Readiness
+**Tasks:**
+- [ ] Add `anonymize_authors` parameter
+- [ ] Replace author emails with hashed IDs
+- [ ] Option to exclude author names entirely
+- [ ] Pattern-only analysis mode
+
+**Why:** Makes the tool safer to use in team settings.
+
+### 5. CI/CD Integration Examples 📦
 **Priority: MEDIUM**
 
-- [ ] Error handling improvements
-- [ ] Logging and monitoring
-- [ ] Rate limiting
-- [ ] Configuration management (env vars)
-- [ ] Health check endpoint
+Show how to integrate into development workflows:
 
-### 6. Documentation Enhancements
+**Tasks:**
+- [ ] GitHub Actions example for repository analysis
+- [ ] Pre-commit hook example
+- [ ] PR comment integration
+- [ ] Automated bias reports
+
+**Why:** Makes the tool more practical for teams.
+
+### 6. Enhanced Documentation 📚
 **Priority: LOW**
 
-- [ ] API reference documentation
-- [ ] Architecture diagrams
-- [ ] Video tutorials
-- [ ] Blog post / announcement
+Improve user experience:
 
-## 🎯 Recommended First Steps
+**Tasks:**
+- [ ] Add video walkthrough
+- [ ] Create example repository analysis report
+- [ ] Add troubleshooting guide
+- [ ] Create quick reference card
 
-### Step 1: Test with Real MCP Client (30 min)
-Set up Claude Desktop and test the tools:
+**Why:** Better docs = easier adoption.
 
-```bash
-# 1. Install Claude Desktop
-# 2. Add to config (~/Library/Application Support/Claude/claude_desktop_config.json):
-{
-  "mcpServers": {
-    "fairmind": {
-      "command": "bun",
-      "args": ["run", "/absolute/path/to/fairmind-mcp/src/index.ts"],
-      "cwd": "/absolute/path/to/fairmind-mcp"
-    }
-  }
-}
-# 3. Restart Claude Desktop
-# 4. Test: "Please evaluate this text for gender bias: 'Nurses are gentle women'"
-```
+## 🔮 Medium-Term Goals (Next Month)
 
-### Step 2: Set Up CI/CD (20 min)
-Create GitHub Actions workflow for automated testing.
+### 7. Visualization Dashboard 📊
+**Priority: MEDIUM**
 
-### Step 3: Performance Benchmarking (30 min)
-Measure token savings and latency:
+Make results easier to understand:
 
-```bash
-# Create benchmark script
-bun run test:benchmark
-```
+**Tasks:**
+- [ ] Generate HTML reports from analysis
+- [ ] Charts for bias trends over time
+- [ ] Author comparison visualizations
+- [ ] Pattern frequency charts
 
-### Step 4: Enhance Fairness Metrics (1-2 hours)
-Upgrade from MVP heuristics to full Fairlearn implementation.
+**Why:** Visual reports are more actionable than JSON.
 
-## 📊 Success Metrics to Track
+### 8. Advanced Pattern Recognition 🧠
+**Priority: LOW**
 
-- **Reliability**: Python subprocess stability (no crashes)
-- **Latency**: P95 < 1.5s for <500 word audits
-- **Efficiency**: Output payload < 200 tokens
-- **Correctness**: >90% successful bias correction rate
+Make pattern detection smarter:
 
-## 🔗 Integration Opportunities
+**Tasks:**
+- [ ] Machine learning for pattern classification
+- [ ] Context-aware bias detection
+- [ ] False positive reduction
+- [ ] Pattern clustering
 
-1. **Main FairMind Repo**: Consider adding as `apps/mcp-server/` in monorepo
-2. **NPM Package**: Publish as `@fairmind/mcp-server` for easy installation
-3. **MCP Registry**: Submit to official MCP registry when ready
+**Why:** Improves accuracy and reduces noise.
 
-## 💡 Quick Wins
+### 9. Integration with Code Review Tools 🔗
+**Priority: LOW**
 
-- Add `.env.example` for configuration
-- Create `CONTRIBUTING.md` for contributors
-- Add license file (MIT)
-- Set up issue templates
-- Add GitHub topics/tags
+Make it part of the workflow:
+
+**Tasks:**
+- [ ] GitHub App integration
+- [ ] GitLab integration
+- [ ] Bitbucket integration
+- [ ] Slack notifications
+
+**Why:** Integrates into existing workflows.
+
+## 🎯 Recommended Starting Point
+
+**Start with #1 (Test Repository Analysis)** - it's the most immediate need and will reveal what needs fixing.
+
+Then move to **#2 (Real-World Testing)** to validate the entire system works end-to-end.
+
+## Quick Wins (Can Do Anytime)
+
+- [ ] Add more example prompts to documentation
+- [ ] Create a demo video
+- [ ] Write a blog post about the project
+- [ ] Add more test cases
+- [ ] Improve error messages
+
+## Questions to Consider
+
+1. **What's the primary use case?** (Individual developers vs teams vs compliance)
+2. **What's blocking adoption?** (Performance? Privacy? Complexity?)
+3. **What feedback do we need?** (From actual users)
 
 ---
 
-**Ready to start?** I recommend beginning with **Step 1** (MCP client testing) to validate the end-to-end flow!
-
+**Next Action:** Test the repository analysis feature on a real repository to validate it works.
