@@ -22,6 +22,8 @@ export class PythonBridge {
   private scriptPath: string;
   private pyEngineDir: string;
 
+  private warmupPromise: Promise<void> | null = null;
+
   constructor() {
     // Get the project root directory (where this file is located)
     // Use fileURLToPath to convert import.meta.url to a file path
@@ -41,6 +43,40 @@ export class PythonBridge {
     console.error(`[FairMind] Working directory: ${this.pyEngineDir}`);
     
     this.startProcess();
+    
+    // Perform warm-up request to eliminate first-request penalty
+    this.warmup();
+  }
+
+  private async warmup(): Promise<void> {
+    // Only warm up once
+    if (this.warmupPromise) {
+      return this.warmupPromise;
+    }
+
+    this.warmupPromise = (async () => {
+      try {
+        // Wait a bit for process to be ready
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Send a minimal warm-up request
+        await this.evaluateBias(
+          'test',
+          'gender',
+          'generative',
+          'text'
+        ).catch(() => {
+          // Ignore warm-up errors - process might not be ready yet
+        });
+        
+        console.error('[FairMind] Warm-up completed');
+      } catch (error) {
+        // Warm-up failures are non-critical
+        console.error('[FairMind] Warm-up failed (non-critical):', error);
+      }
+    })();
+
+    return this.warmupPromise;
   }
 
   private startProcess() {

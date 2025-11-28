@@ -5,66 +5,125 @@ from typing import Any, List, Dict, Union
 
 class ToonCodec:
     """
-    A basic implementation of TOON (Token-Oriented Object Notation) for Python.
-    Supports encoding simple list of objects and decoding them.
+    Optimized TOON (Token-Oriented Object Notation) encoder for Python.
+    Supports encoding nested structures, arrays, and large payloads efficiently.
     """
+    
+    @staticmethod
+    def _escape_value(val: Any) -> str:
+        """Escape special characters in values."""
+        if val is None:
+            return ""
+        str_val = str(val)
+        # Replace problematic characters
+        str_val = str_val.replace(",", " ").replace("\n", " ").replace("\r", " ")
+        # Truncate very long values (keep first 200 chars)
+        if len(str_val) > 200:
+            str_val = str_val[:200] + "..."
+        return str_val
+    
+    @staticmethod
+    def _encode_value(value: Any, indent: int = 0) -> List[str]:
+        """
+        Recursively encode a value (handles nested structures).
+        Returns list of lines for the encoded value.
+        """
+        lines = []
+        prefix = "  " * indent
+        
+        if isinstance(value, dict):
+            # Check if this dict contains arrays of objects (most efficient pattern)
+            has_object_arrays = any(
+                isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict)
+                for v in value.values()
+            )
+            
+            if has_object_arrays:
+                # Optimize: encode arrays of objects with column headers
+                for key, val in value.items():
+                    if isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
+                        # Array of objects - use column format
+                        columns = list(val[0].keys())
+                        header = f"{prefix}{key}[{len(val)}]{{{','.join(columns)}}}:"
+                        lines.append(header)
+                        for item in val:
+                            row = []
+                            for col in columns:
+                                row.append(ToonCodec._escape_value(item.get(col)))
+                            lines.append(f"{prefix}  {','.join(row)}")
+                    elif isinstance(val, list) and len(val) > 0:
+                        # Simple array
+                        header = f"{prefix}{key}[{len(val)}]:"
+                        lines.append(header)
+                        for item in val:
+                            if isinstance(item, dict):
+                                # Nested dict in array - encode inline
+                                item_lines = ToonCodec._encode_value(item, indent + 1)
+                                lines.extend(item_lines)
+                            else:
+                                lines.append(f"{prefix}  {ToonCodec._escape_value(item)}")
+                    elif isinstance(val, dict):
+                        # Nested dict - recurse
+                        lines.append(f"{prefix}{key}:")
+                        nested_lines = ToonCodec._encode_value(val, indent + 1)
+                        lines.extend(nested_lines)
+                    else:
+                        # Simple value
+                        if val is not None:
+                            lines.append(f"{prefix}{key}: {ToonCodec._escape_value(val)}")
+            else:
+                # Flat or nested dict without arrays - encode key:value pairs
+                for key, val in value.items():
+                    if isinstance(val, dict):
+                        lines.append(f"{prefix}{key}:")
+                        nested_lines = ToonCodec._encode_value(val, indent + 1)
+                        lines.extend(nested_lines)
+                    elif isinstance(val, list):
+                        if len(val) > 0 and isinstance(val[0], dict):
+                            # Array of objects
+                            columns = list(val[0].keys())
+                            header = f"{prefix}{key}[{len(val)}]{{{','.join(columns)}}}:"
+                            lines.append(header)
+                            for item in val:
+                                row = []
+                                for col in columns:
+                                    row.append(ToonCodec._escape_value(item.get(col)))
+                                lines.append(f"{prefix}  {','.join(row)}")
+                        else:
+                            # Simple array
+                            header = f"{prefix}{key}[{len(val)}]:"
+                            lines.append(header)
+                            for item in val:
+                                lines.append(f"{prefix}  {ToonCodec._escape_value(item)}")
+                    else:
+                        if val is not None:
+                            lines.append(f"{prefix}{key}: {ToonCodec._escape_value(val)}")
+        elif isinstance(value, list):
+            # Top-level list
+            lines.append(f"{prefix}items[{len(value)}]:")
+            for item in value:
+                if isinstance(item, dict):
+                    item_lines = ToonCodec._encode_value(item, indent + 1)
+                    lines.extend(item_lines)
+                else:
+                    lines.append(f"{prefix}  {ToonCodec._escape_value(item)}")
+        else:
+            # Primitive value
+            lines.append(f"{prefix}{ToonCodec._escape_value(value)}")
+        
+        return lines
     
     @staticmethod
     def encode(data: Any) -> str:
         """
-        Encodes a dictionary or list of dictionaries into TOON format.
-        Handles both flat objects and arrays of objects.
+        Encodes data into TOON format.
+        Optimized for large payloads with nested structures and arrays.
         """
-        if isinstance(data, dict):
-            lines = []
-            # Check if this is a flat object (like a request) or has arrays
-            has_arrays = any(isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict) for v in data.values())
-            
-            if has_arrays:
-                # Array-of-objects pattern: key[count]{cols}: values
-                for key, value in data.items():
-                    if isinstance(value, list) and len(value) > 0 and isinstance(value[0], dict):
-                        columns = list(value[0].keys())
-                        header = f"{key}[{len(value)}]{{{','.join(columns)}}}:"
-                        lines.append(header)
-                        for item in value:
-                            row = []
-                            for col in columns:
-                                val = item.get(col, "")
-                                str_val = str(val).replace(",", " ").replace("\n", " ") 
-                                row.append(str_val)
-                            lines.append(f"  {','.join(row)}")
-                    elif isinstance(value, list) and len(value) > 0:
-                        # Simple list of strings/numbers
-                        header = f"{key}[{len(value)}]:"
-                        lines.append(header)
-                        for item in value:
-                            lines.append(f"  {item}")
-                    else:
-                        # Simple key-value
-                        lines.append(f"{key}: {value}")
-            else:
-                # Flat object - encode as key:value pairs
-                for key, value in data.items():
-                    if isinstance(value, (dict, list)):
-                        # Nested structure - convert to JSON string for now
-                        import json
-                        lines.append(f"{key}: {json.dumps(value)}")
-                    else:
-                        lines.append(f"{key}: {value}")
-            return "\n".join(lines)
-        elif isinstance(data, list):
-            # List of items
-            lines = [f"items[{len(data)}]:"]
-            for item in data:
-                if isinstance(item, dict):
-                    # Convert dict to key:value format
-                    item_str = ", ".join(f"{k}:{v}" for k, v in item.items())
-                    lines.append(f"  {item_str}")
-                else:
-                    lines.append(f"  {item}")
-            return "\n".join(lines)
-        return str(data)
+        if data is None:
+            return ""
+        
+        lines = ToonCodec._encode_value(data, indent=0)
+        return "\n".join(lines)
 
     @staticmethod
     def decode(text: str) -> Dict[str, Any]:

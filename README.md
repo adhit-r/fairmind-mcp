@@ -18,9 +18,9 @@ FairMind MCP is a Model Context Protocol server that enables AI agents to mathem
 
 The system follows a Broker Pattern:
 
-- **MCP Server (TypeScript/Bun)**: Handles MCP protocol communication and manages the Python kernel with auto-restart and timeout protection
+- **MCP Server (TypeScript/Bun)**: Handles MCP protocol communication and manages the Python kernel with auto-restart, timeout protection, and automatic warm-up to eliminate first-request penalty
 - **Python Analysis Kernel**: Runs fairness auditing using Fairlearn/AIF360 and LiteRT-powered inference
-- **TOON Codec**: Efficient serialization format for token-optimized communication
+- **TOON Codec**: Optimized serialization format for token-optimized communication, with enhanced support for large payloads and nested structures
 
 ## Installation
 
