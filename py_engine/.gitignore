@@ -2,6 +2,9 @@
 __pycache__/
 *.py[oc]
 build/
+
+# Backward compatibility shims (archived)
+_compat/
 dist/
 wheels/
 *.egg-info

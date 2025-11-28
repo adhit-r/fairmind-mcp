@@ -64,7 +64,7 @@ async function testWithGemini(apiKey: string) {
 
   try {
     // Test 1: Ask Gemini to evaluate a biased text
-    console.log('1️⃣  Testing: Gemini evaluating biased text\n');
+    console.log('Test 1: Testing Gemini evaluating biased text\n');
     
     const prompt1 = `Please evaluate this job description for gender bias: "We are looking for a nurse who is gentle and nurturing. The ideal candidate is a woman who cares deeply about patients." Use the evaluate_bias tool to check for bias.`;
 
@@ -74,14 +74,14 @@ async function testWithGemini(apiKey: string) {
     });
 
     const response1 = result1.response;
-    console.log('📝 Gemini Response:', response1.text());
+    console.log('Gemini Response:', response1.text());
     
     // Check if Gemini wants to call a function
     const functionCalls = response1.functionCalls();
     if (functionCalls && functionCalls.length > 0) {
       for (const call of functionCalls) {
-        console.log(`\n🔧 Gemini wants to call: ${call.name}`);
-        console.log('📥 Arguments:', JSON.stringify(call.args, null, 2));
+        console.log(`\nGemini wants to call: ${call.name}`);
+        console.log('Arguments:', JSON.stringify(call.args, null, 2));
 
         // Execute the tool call
         let toolResult;
@@ -98,7 +98,7 @@ async function testWithGemini(apiKey: string) {
           );
         }
 
-        console.log('✅ Tool Result:', JSON.stringify(toolResult, null, 2));
+        console.log('Tool Result:', JSON.stringify(toolResult, null, 2));
 
         // Send result back to Gemini
         const result2 = await model.generateContent({
@@ -120,12 +120,12 @@ async function testWithGemini(apiKey: string) {
           tools: [{ functionDeclarations: tools }],
         });
 
-        console.log('\n🤖 Gemini Final Response:', result2.response.text());
+        console.log('\nGemini Final Response:', result2.response.text());
       }
     }
 
     // Test 2: Ask Gemini to generate counterfactuals
-    console.log('\n\n2️⃣  Testing: Gemini generating counterfactuals\n');
+    console.log('\n\nTest 2: Testing Gemini generating counterfactuals\n');
     
     const prompt2 = `The text "The nurse was gentle" contains potential gender bias. Please use the generate_counterfactuals tool to suggest alternative wording.`;
 
@@ -135,20 +135,20 @@ async function testWithGemini(apiKey: string) {
     });
 
     const response2 = result3.response;
-    console.log('📝 Gemini Response:', response2.text());
+    console.log('Gemini Response:', response2.text());
     
     const functionCalls2 = response2.functionCalls();
     if (functionCalls2 && functionCalls2.length > 0) {
       for (const call of functionCalls2) {
-        console.log(`\n🔧 Gemini wants to call: ${call.name}`);
-        console.log('📥 Arguments:', JSON.stringify(call.args, null, 2));
+        console.log(`\nGemini wants to call: ${call.name}`);
+        console.log('Arguments:', JSON.stringify(call.args, null, 2));
 
         const toolResult = await bridge.generateCounterfactuals(
           call.args.content as string,
           call.args.sensitive_group as string
         );
 
-        console.log('✅ Tool Result:', JSON.stringify(toolResult, null, 2));
+        console.log('Tool Result:', JSON.stringify(toolResult, null, 2));
 
         const result4 = await model.generateContent({
           contents: [
@@ -169,13 +169,13 @@ async function testWithGemini(apiKey: string) {
           tools: [{ functionDeclarations: tools }],
         });
 
-        console.log('\n🤖 Gemini Final Response:', result4.response.text());
+        console.log('\nGemini Final Response:', result4.response.text());
       }
     }
 
-    console.log('\n✅ All Gemini tests completed!');
+    console.log('\nAll Gemini tests completed!');
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('Error:', error);
   } finally {
     bridge.destroy();
   }
@@ -185,7 +185,7 @@ async function testWithGemini(apiKey: string) {
 const apiKey = process.env.GEMINI_API_KEY || process.argv[2];
 
 if (!apiKey) {
-  console.error('❌ Please provide a Gemini API key:');
+  console.error('Please provide a Gemini API key:');
   console.error('   Option 1: Set GEMINI_API_KEY environment variable');
   console.error('   Option 2: Pass as argument: bun run test:gemini YOUR_API_KEY');
   process.exit(1);

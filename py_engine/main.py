@@ -1,12 +1,46 @@
 #!/usr/bin/env python3
 # py_engine/main.py
+"""
+Main entry point for FairMind MCP Python engine.
+Routes requests to appropriate tool handlers via the registry pattern.
+"""
 import sys
 import json
-from codec import ToonCodec
-from auditor import evaluate_bias_audit
-from inference import generate_counterfactuals_nlp
+from pydantic import ValidationError, TypeAdapter
+from models import RequestUnion
+from core.codec import ToonCodec
+from tools.registry import dispatch_tool
+
+
+def process_request(request_data: dict) -> dict:
+    """
+    Process a single request: validate, route, and return response.
+    
+    Args:
+        request_data: Raw request dictionary from JSON/TOON
+        
+    Returns:
+        Response dictionary
+    """
+    try:
+        # Validate request using Pydantic adapter
+        # This automatically selects the correct model based on 'command' discriminator
+        adapter = TypeAdapter(RequestUnion)
+        req = adapter.validate_python(request_data)
+        
+        # Dispatch to appropriate tool handler
+        return dispatch_tool(req)
+        
+    except ValidationError as e:
+        return {'error': f'Validation Error: {e}'}
+    except Exception as e:
+        return {'error': str(e)}
+
 
 def main():
+    """
+    Main event loop: read from stdin, process requests, write to stdout.
+    """
     codec = ToonCodec()
     
     for line in sys.stdin:
@@ -17,45 +51,18 @@ def main():
         try:
             # Try JSON first (from TypeScript), fallback to TOON
             try:
-                import json
-                request = json.loads(line)
+                request_data = json.loads(line)
             except json.JSONDecodeError:
                 # Fallback to TOON decode
-                request = codec.decode(line)
+                request_data = codec.decode(line)
             
-            command = request.get('command', '')
+            response = process_request(request_data)
+            print(json.dumps(response), flush=True)
             
-            if command == 'evaluate_bias':
-                content = request.get('content', '')
-                protected_attribute = request.get('protected_attribute', '')
-                task_type = request.get('task_type', 'generative')
-                
-                result = evaluate_bias_audit(content, protected_attribute, task_type)
-                
-                # Encode response as JSON for now (more reliable)
-                # TOON encoding can be added later for final agent responses
-                import json
-                response = {'result': result}
-                print(json.dumps(response), flush=True)
-                
-            elif command == 'generate_counterfactuals':
-                content = request.get('content', '')
-                sensitive_group = request.get('sensitive_group', '')
-                
-                result = generate_counterfactuals_nlp(content, sensitive_group)
-                
-                # Encode response as JSON for now
-                import json
-                response = {'counterfactuals': result}
-                print(json.dumps(response), flush=True)
-                
-            else:
-                error_response = {'error': f'Unknown command: {command}'}
-                print(codec.encode(error_response), flush=True)
-                
         except Exception as e:
-            error_response = {'error': str(e)}
-            print(codec.encode(error_response), flush=True)
+            error_response = {'error': f'Protocol Error: {str(e)}'}
+            print(json.dumps(error_response), flush=True)
+
 
 if __name__ == '__main__':
     main()

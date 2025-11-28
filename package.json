@@ -6,12 +6,15 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run src/index.ts",
+    "ui": "bun run ui/server.js",
     "test": "bun run test/python-bridge-test.ts",
     "test:mcp": "bun run test/mcp-test.ts",
     "test:gemini": "bun run test/gemini-test.ts",
-    "test:codec": "cd py_engine && uv run python codec.py",
-    "test:auditor": "cd py_engine && uv run python -c \"from auditor import evaluate_bias_audit; print(evaluate_bias_audit('Nurses are gentle', 'gender', 'generative'))\"",
-    "test:inference": "cd py_engine && uv run python -c \"from inference import generate_counterfactuals_nlp; print(generate_counterfactuals_nlp('The nurse was gentle', 'gender'))\""
+    "test:codec": "cd py_engine && uv run python -c \"from core.codec import ToonCodec; c = ToonCodec(); print('✅ Codec works')\"",
+    "test:auditor": "cd py_engine && uv run python -c \"from core.auditor import evaluate_bias_audit; print(evaluate_bias_audit('Nurses are gentle', 'gender', 'generative'))\"",
+    "test:inference": "cd py_engine && uv run python -c \"from core.inference import generate_counterfactuals_nlp; print(generate_counterfactuals_nlp('The nurse was gentle', 'gender'))\"",
+    "test:enhanced-metrics": "bun run test/test-enhanced-metrics.ts",
+    "test:all": "bun run test:codec && bun run test:auditor && bun run test:inference && bun run test && bun run test:enhanced-metrics"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairMind MCP - Tools & Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        @import "tailwindcss";
+        
+        :root {
+            --background: oklch(96.22% 0.0569 95.61);
+            --foreground: oklch(0% 0 0);
+            --main: oklch(84.08% 0.1725 84.2);
+            --border: oklch(0% 0 0);
+            --shadow: 4px 4px 0px 0px var(--border);
+            --neo-orange: #FF6B35;
+            --neo-white: #FFFFFA;
+            --neo-black: #121212;
+            --neo-blue: #3E92CC;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            @apply text-foreground font-medium bg-background;
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .shadow-hard {
+            box-shadow: 8px 8px 0px 0px var(--neo-black);
+        }
+        
+        .shadow-hard-sm {
+            box-shadow: 4px 4px 0px 0px var(--neo-black);
+        }
+    </style>
+</head>
+<body class="bg-neo-white text-neo-black min-h-screen">
+    <!-- Navigation -->
+    <nav class="border-b-4 border-neo-black bg-neo-white p-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-3xl font-black tracking-tighter italic">
+                FAIRMIND<span class="text-neo-orange">_MCP</span>
+            </div>
+            <div class="hidden md:flex gap-8 font-bold text-lg">
+                <a href="#tools" class="hover:underline decoration-4 underline-offset-4 decoration-neo-orange">Tools</a>
+                <a href="#test" class="hover:underline decoration-4 underline-offset-4 decoration-neo-orange">Test</a>
+                <a href="#docs" class="hover:underline decoration-4 underline-offset-4 decoration-neo-orange">Docs</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="border-b-4 border-neo-black bg-neo-orange p-12 md:p-20">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-5xl md:text-7xl font-black mb-6 text-neo-black">
+                MCP TOOLS
+            </h1>
+            <p class="text-xl md:text-2xl font-bold border-l-8 border-neo-black pl-6 text-left">
+                Model Context Protocol server for autonomous AI bias detection and correction.
+            </p>
+        </div>
+    </header>
+
+    <!-- Tools Section -->
+    <section id="tools" class="py-16 px-4 max-w-7xl mx-auto">
+        <h2 class="text-4xl font-black mb-12 text-center uppercase">Available Tools</h2>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Tool 1: evaluate_bias -->
+            <div class="bg-neo-white border-4 border-neo-black p-8 shadow-hard">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-neo-blue border-4 border-neo-black flex items-center justify-center text-2xl font-bold text-white">FM</div>
+                    <h3 class="text-3xl font-black">evaluate_bias</h3>
+                </div>
+                <p class="font-medium mb-6">
+                    Evaluates text or data for bias against protected attributes using Fairlearn metrics.
+                </p>
+                
+                <div class="bg-neo-black text-neo-white p-4 code-font text-sm mb-4">
+                    <div class="text-neo-orange">Parameters:</div>
+                    <div class="mt-2">
+                        <div><span class="text-blue-400">content</span>: <span class="text-gray-300">string</span></div>
+                        <div><span class="text-blue-400">protected_attribute</span>: <span class="text-yellow-300">"gender" | "race" | "age" | "disability"</span></div>
+                        <div><span class="text-blue-400">task_type</span>: <span class="text-yellow-300">"generative" | "classification"</span></div>
+                    </div>
+                </div>
+                
+                <button onclick="testEvaluateBias()" class="bg-neo-orange text-neo-black px-6 py-3 font-bold border-4 border-neo-black shadow-hard-sm hover:translate-x-1 hover:translate-y-1 transition-all w-full">
+                    Test Tool
+                </button>
+            </div>
+
+            <!-- Tool 2: generate_counterfactuals -->
+            <div class="bg-neo-white border-4 border-neo-black p-8 shadow-hard">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-green-400 border-4 border-neo-black flex items-center justify-center text-2xl font-bold text-black">🔄</div>
+                    <h3 class="text-3xl font-black">generate_counterfactuals</h3>
+                </div>
+                <p class="font-medium mb-6">
+                    Generates alternative text suggestions to reduce bias using LiteRT-powered inference.
+                </p>
+                
+                <div class="bg-neo-black text-neo-white p-4 code-font text-sm mb-4">
+                    <div class="text-neo-orange">Parameters:</div>
+                    <div class="mt-2">
+                        <div><span class="text-blue-400">content</span>: <span class="text-gray-300">string</span></div>
+                        <div><span class="text-blue-400">sensitive_group</span>: <span class="text-yellow-300">"gender" | "race" | "age"</span></div>
+                    </div>
+                </div>
+                
+                <button onclick="testGenerateCounterfactuals()" class="bg-green-400 text-neo-black px-6 py-3 font-bold border-4 border-neo-black shadow-hard-sm hover:translate-x-1 hover:translate-y-1 transition-all w-full">
+                    Test Tool
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Test Section -->
+    <section id="test" class="py-16 px-4 max-w-7xl mx-auto bg-gray-100 border-y-4 border-neo-black">
+        <h2 class="text-4xl font-black mb-12 text-center uppercase">Interactive Testing</h2>
+        
+        <div class="bg-neo-white border-4 border-neo-black p-8 shadow-hard max-w-4xl mx-auto">
+            <div class="mb-6">
+                <label class="block font-bold mb-2">Select Tool:</label>
+                <select id="toolSelect" class="w-full border-4 border-neo-black p-3 font-bold" onchange="updateTestForm()">
+                    <option value="evaluate_bias">evaluate_bias</option>
+                    <option value="generate_counterfactuals">generate_counterfactuals</option>
+                </select>
+            </div>
+            
+            <div id="testForm" class="space-y-4">
+                <!-- Form will be populated by JavaScript -->
+            </div>
+            
+            <button onclick="runTest()" class="mt-6 bg-neo-black text-neo-white px-8 py-4 text-xl font-bold border-4 border-neo-black shadow-hard hover:translate-x-1 hover:translate-y-1 transition-all w-full">
+                Run Test
+            </button>
+            
+            <div id="testResult" class="mt-6 hidden">
+                <div class="bg-neo-black text-neo-white p-6 code-font text-sm">
+                    <div class="text-neo-orange mb-2">Result:</div>
+                    <pre id="resultContent" class="text-gray-300 overflow-auto"></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="py-16 px-4 max-w-7xl mx-auto">
+        <h2 class="text-4xl font-black mb-12 text-center uppercase">Documentation</h2>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+            <a href="docs/CLAUDE_DESKTOP_SETUP.md" class="bg-neo-white border-4 border-neo-black p-6 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <h3 class="text-xl font-bold mb-2">Claude Desktop</h3>
+                <p class="text-sm">Setup guide for Claude Desktop integration</p>
+            </a>
+            
+            <a href="docs/CURSOR_SETUP.md" class="bg-neo-white border-4 border-neo-black p-6 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <h3 class="text-xl font-bold mb-2">Cursor</h3>
+                <p class="text-sm">Setup guide for Cursor integration</p>
+            </a>
+            
+            <a href="docs/INTEGRATION_EXAMPLES.md" class="bg-neo-white border-4 border-neo-black p-6 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <h3 class="text-xl font-bold mb-2">Examples</h3>
+                <p class="text-sm">Real-world integration examples</p>
+            </a>
+            
+            <a href="docs/HOW_TO_TEST.md" class="bg-neo-white border-4 border-neo-black p-6 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <h3 class="text-xl font-bold mb-2">Testing</h3>
+                <p class="text-sm">Comprehensive testing guide</p>
+            </a>
+            
+            <a href="README.md" class="bg-neo-white border-4 border-neo-black p-6 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <h3 class="text-xl font-bold mb-2">README</h3>
+                <p class="text-sm">Project overview and quick start</p>
+            </a>
+            
+            <a href="docs/NEXT_STEPS.md" class="bg-neo-white border-4 border-neo-black p-6 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <h3 class="text-xl font-bold mb-2">Roadmap</h3>
+                <p class="text-sm">Development roadmap and next steps</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neo-black text-neo-white py-12 border-t-4 border-neo-white mt-16">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h4 class="text-2xl font-black italic mb-2">FAIRMIND_MCP</h4>
+            <p class="text-gray-400">Model Context Protocol server for AI bias detection</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tool configurations
+        const tools = {
+            evaluate_bias: {
+                params: [
+                    { name: 'content', type: 'textarea', label: 'Content', placeholder: 'Enter text to evaluate for bias...', default: 'Nurses are gentle women who care for patients' },
+                    { name: 'protected_attribute', type: 'select', label: 'Protected Attribute', options: ['gender', 'race', 'age', 'disability'], default: 'gender' },
+                    { name: 'task_type', type: 'select', label: 'Task Type', options: ['generative', 'classification'], default: 'generative' }
+                ]
+            },
+            generate_counterfactuals: {
+                params: [
+                    { name: 'content', type: 'textarea', label: 'Content', placeholder: 'Enter text to generate alternatives for...', default: 'The nurse was gentle' },
+                    { name: 'sensitive_group', type: 'select', label: 'Sensitive Group', options: ['gender', 'race', 'age'], default: 'gender' }
+                ]
+            }
+        };
+
+        function updateTestForm() {
+            const toolName = document.getElementById('toolSelect').value;
+            const tool = tools[toolName];
+            const form = document.getElementById('testForm');
+            
+            form.innerHTML = tool.params.map(param => {
+                if (param.type === 'textarea') {
+                    return `
+                        <div>
+                            <label class="block font-bold mb-2">${param.label}:</label>
+                            <textarea 
+                                id="${param.name}" 
+                                class="w-full border-4 border-neo-black p-3 font-mono" 
+                                rows="3"
+                                placeholder="${param.placeholder}">${param.default || ''}</textarea>
+                        </div>
+                    `;
+                } else if (param.type === 'select') {
+                    return `
+                        <div>
+                            <label class="block font-bold mb-2">${param.label}:</label>
+                            <select id="${param.name}" class="w-full border-4 border-neo-black p-3 font-bold">
+                                ${param.options.map(opt => 
+                                    `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        async function runTest() {
+            const toolName = document.getElementById('toolSelect').value;
+            const tool = tools[toolName];
+            const params = {};
+            
+            tool.params.forEach(param => {
+                const element = document.getElementById(param.name);
+                params[param.name] = param.type === 'textarea' ? element.value : element.value;
+            });
+
+            const resultDiv = document.getElementById('testResult');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.classList.remove('hidden');
+            resultContent.textContent = 'Testing...';
+
+            try {
+                // Call the MCP server via a local API endpoint
+                const response = await fetch('/api/test-tool', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tool: toolName, params })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultContent.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    const error = await response.json();
+                    resultContent.textContent = JSON.stringify(error, null, 2);
+                }
+            } catch (error) {
+                resultContent.textContent = JSON.stringify({
+                    error: 'Failed to connect to server',
+                    message: error.message,
+                    note: 'Make sure the UI server is running: bun run ui'
+                }, null, 2);
+            }
+        }
+
+        function testEvaluateBias() {
+            document.getElementById('toolSelect').value = 'evaluate_bias';
+            updateTestForm();
+            document.getElementById('test').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function testGenerateCounterfactuals() {
+            document.getElementById('toolSelect').value = 'generate_counterfactuals';
+            updateTestForm();
+            document.getElementById('test').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize form on load
+        updateTestForm();
+    </script>
+</body>
+</html>
+

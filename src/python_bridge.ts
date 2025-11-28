@@ -1,101 +1,320 @@
-// src/python_bridge.ts
 import { spawn, ChildProcess } from 'child_process';
 import { encode, decode } from '@toon-format/toon';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const MAX_RESTARTS = 3;
+
+interface QueueItem {
+  resolve: (value: any) => void;
+  reject: (error: Error) => void;
+  timeout?: NodeJS.Timeout;
+}
 
 export class PythonBridge {
   private process: ChildProcess | null = null;
-  private messageQueue: Array<{ resolve: (value: any) => void; reject: (error: Error) => void }> = [];
+  private messageQueue: QueueItem[] = [];
   private buffer: string = '';
+  private restartCount: number = 0;
+  private isShuttingDown: boolean = false;
+  private pythonPath: string;
+  private scriptPath: string;
+  private pyEngineDir: string;
 
   constructor() {
-    const pythonPath = join(process.cwd(), 'py_engine', '.venv', 'bin', 'python');
-    const scriptPath = join(process.cwd(), 'py_engine', 'main.py');
+    // Get the project root directory (where this file is located)
+    // Use fileURLToPath to convert import.meta.url to a file path
+    const currentFile = fileURLToPath(import.meta.url);
+    const srcDir = dirname(currentFile);
+    const projectRoot = join(srcDir, '..');
     
-    this.process = spawn(pythonPath, [scriptPath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: join(process.cwd(), 'py_engine'),
-    });
-
-    this.process.stdout?.on('data', (data: Buffer) => {
-      this.buffer += data.toString();
-      // Python outputs JSON, one per line
-      // Process complete lines
-      const lines = this.buffer.split('\n');
-      
-      // Keep the last incomplete line in buffer
-      this.buffer = lines.pop() || '';
-      
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        
-        const pending = this.messageQueue.shift();
-        if (!pending) continue;
-        
-        try {
-          // Try JSON first (Python outputs JSON)
-          let decoded;
-          try {
-            decoded = JSON.parse(trimmed);
-          } catch (jsonError) {
-            // If JSON fails, try TOON decode
-            try {
-              decoded = decode(trimmed);
-            } catch (toonError) {
-              // If both fail, try Python codec's simple format
-              decoded = this.parseSimpleFormat(trimmed);
-            }
-          }
-          
-          pending.resolve(decoded);
-        } catch (error) {
-          pending.reject(error as Error);
-        }
-      }
-    });
-
-    this.process.stderr?.on('data', (data: Buffer) => {
-      console.error('[Python]', data.toString());
-    });
-
-    this.process.on('exit', (code) => {
-      console.error(`[Python] Process exited with code ${code}`);
-      this.process = null;
-    });
+    this.pyEngineDir = process.env.FAIRMIND_PY_DIR || join(projectRoot, 'py_engine');
+    
+    // Resolve Python path: Env var > venv > fallback
+    this.pythonPath = process.env.FAIRMIND_PYTHON_PATH || join(this.pyEngineDir, '.venv', 'bin', 'python');
+    this.scriptPath = join(this.pyEngineDir, 'main.py');
+    
+    console.error(`[FairMind] Project root: ${projectRoot}`);
+    console.error(`[FairMind] Python path: ${this.pythonPath}`);
+    console.error(`[FairMind] Script path: ${this.scriptPath}`);
+    console.error(`[FairMind] Working directory: ${this.pyEngineDir}`);
+    
+    this.startProcess();
   }
 
-  async sendCommand(command: string, payload: any): Promise<any> {
+  private startProcess() {
+    if (this.isShuttingDown) return;
+
+    if (this.process) {
+        try {
+            this.process.kill();
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    try {
+        this.process = spawn(this.pythonPath, [this.scriptPath], {
+            stdio: ['pipe', 'pipe', 'pipe'],
+            cwd: this.pyEngineDir,
+        });
+        
+        console.error('[FairMind] Python process started, pid:', this.process.pid);
+
+        this.process.stdout?.on('data', (data: Buffer) => {
+          this.handleStdout(data);
+        });
+
+        this.process.stderr?.on('data', (data: Buffer) => {
+          console.error('[Python]', data.toString());
+        });
+
+        this.process.on('exit', (code, signal) => {
+          console.error(`[Python] Process exited with code ${code}, signal ${signal}`);
+          this.process = null;
+          this.handleExit(code);
+        });
+
+        this.process.on('error', (error) => {
+          console.error('[Python] Process error:', error);
+          this.process = null;
+          // Trigger restart logic via exit handler or directly
+          if (!this.process) { 
+              this.handleExit(1);
+          }
+        });
+
+    } catch (error) {
+        console.error('[FairMind] Failed to spawn python process:', error);
+        this.handleExit(1);
+    }
+  }
+
+  private handleStdout(data: Buffer) {
+    this.buffer += data.toString();
+    
+    // Process complete lines
+    let lines = this.buffer.split('\n');
+    
+    if (this.buffer.endsWith('\n')) {
+        // Complete lines only (last one is empty)
+        lines.pop(); // remove the empty string
+        this.buffer = '';
+    } else {
+        // Last line is incomplete, put it back in buffer
+        this.buffer = lines.pop() || '';
+    }
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      
+      const pending = this.messageQueue.shift();
+      if (!pending) {
+          // Unsolicited output? Log it
+          console.error('[Python Unexpected]', trimmed);
+          continue;
+      }
+      
+      if (pending.timeout) clearTimeout(pending.timeout);
+
+      try {
+        // Try JSON first (Python outputs JSON)
+        let decoded;
+        try {
+          decoded = JSON.parse(trimmed);
+        } catch (jsonError) {
+          // If JSON fails, try TOON decode
+          try {
+            decoded = decode(trimmed);
+          } catch (toonError) {
+            // If both fail, try Python codec's simple format
+            decoded = this.parseSimpleFormat(trimmed);
+          }
+        }
+        
+        pending.resolve(decoded);
+      } catch (error) {
+        pending.reject(error as Error);
+      }
+    }
+  }
+
+  private handleExit(code: number | null) {
+      // Reject all pending requests
+      while (this.messageQueue.length > 0) {
+          const p = this.messageQueue.shift();
+          if (p?.timeout) clearTimeout(p.timeout);
+          p?.reject(new Error(`Python process exited unexpectedly with code ${code}`));
+      }
+
+      if (this.isShuttingDown) return;
+
+      // Auto-restart if not intentional and within limits
+      if (this.restartCount < MAX_RESTARTS) {
+          this.restartCount++;
+          const delay = 1000 * this.restartCount; // Exponential backoffish
+          console.error(`[FairMind] Restarting Python process (${this.restartCount}/${MAX_RESTARTS}) in ${delay}ms...`);
+          setTimeout(() => this.startProcess(), delay);
+      } else {
+          console.error('[FairMind] Max restarts reached. Python bridge is down.');
+      }
+  }
+
+  async sendCommand(command: string, payload: any, timeoutMs: number = DEFAULT_TIMEOUT): Promise<any> {
     if (!this.process) {
-      throw new Error('Python process not initialized');
+        throw new Error('Python process not initialized/available');
     }
 
     return new Promise((resolve, reject) => {
-      this.messageQueue.push({ resolve, reject });
+        const timeout = setTimeout(() => {
+            // Remove from queue if possible (O(n) but queue is small)
+            const idx = this.messageQueue.findIndex(item => item.resolve === resolve);
+            if (idx !== -1) {
+                this.messageQueue.splice(idx, 1);
+                reject(new Error(`Command ${command} timed out after ${timeoutMs}ms`));
+            }
+        }, timeoutMs);
+
+        this.messageQueue.push({ resolve, reject, timeout });
+
+        const request = {
+            command,
+            ...payload,
+        };
       
-      const request = {
-        command,
-        ...payload,
-      };
-      
-      // Use JSON for requests to Python (simpler and more reliable)
-      // Python will convert to TOON for responses
-      this.process?.stdin?.write(JSON.stringify(request) + '\n');
+        try {
+            this.process?.stdin?.write(JSON.stringify(request) + '\n');
+        } catch (e) {
+            // Write failed
+            const idx = this.messageQueue.findIndex(item => item.resolve === resolve);
+            if (idx !== -1) {
+                this.messageQueue.splice(idx, 1);
+            }
+            clearTimeout(timeout);
+            reject(e as Error);
+        }
     });
   }
 
-  async evaluateBias(content: string, protectedAttribute: string, taskType: 'generative' | 'classification'): Promise<any> {
-    return this.sendCommand('evaluate_bias', {
+  async evaluateBias(
+    content: string, 
+    protectedAttribute: string, 
+    taskType: 'generative' | 'classification',
+    contentType: 'text' | 'code' = 'text',
+    protectedAttributes?: string[]
+  ): Promise<any> {
+    const payload: any = {
       content,
-      protected_attribute: protectedAttribute,
       task_type: taskType,
-    });
+      content_type: contentType,
+    };
+    
+    // Support both single and multiple attributes
+    if (protectedAttributes && Array.isArray(protectedAttributes)) {
+      payload.protected_attributes = protectedAttributes;
+    } else {
+      payload.protected_attribute = protectedAttribute;
+    }
+    
+    return this.sendCommand('evaluate_bias', payload);
   }
 
   async generateCounterfactuals(content: string, sensitiveGroup: string): Promise<any> {
     return this.sendCommand('generate_counterfactuals', {
       content,
       sensitive_group: sensitiveGroup,
+    });
+  }
+
+  async compareCodeBias(
+    codeA: string,
+    codeB: string,
+    personaA: string = 'Persona A',
+    personaB: string = 'Persona B',
+    languageA?: string,
+    languageB?: string
+  ): Promise<any> {
+    return this.sendCommand('compare_code_bias', {
+      code_a: codeA,
+      code_b: codeB,
+      persona_a: personaA,
+      persona_b: personaB,
+      language_a: languageA,
+      language_b: languageB,
+    });
+  }
+
+  async evaluateModelOutputs(
+    outputs: string[],
+    protectedAttributes: string[],
+    taskType: 'generative' | 'classification',
+    contentType: 'text' | 'code' = 'text',
+    aggregation: 'summary' | 'detailed' = 'summary'
+  ): Promise<any> {
+    return this.sendCommand('evaluate_model_outputs', {
+      outputs,
+      protected_attributes: protectedAttributes,
+      task_type: taskType,
+      content_type: contentType,
+      aggregation,
+    });
+  }
+
+  async evaluatePromptSuite(
+    prompts: string[],
+    modelOutputs: string[],
+    protectedAttributes: string[],
+    suiteName?: string,
+    taskType: 'generative' | 'classification' = 'generative',
+    contentType: 'text' | 'code' = 'text',
+    previousResults?: any
+  ): Promise<any> {
+    return this.sendCommand('evaluate_prompt_suite', {
+      prompts,
+      model_outputs: modelOutputs,
+      protected_attributes: protectedAttributes,
+      suite_name: suiteName,
+      task_type: taskType,
+      content_type: contentType,
+      previous_results: previousResults,
+    });
+  }
+
+  async evaluateModelResponse(
+    prompt: string,
+    response: string,
+    protectedAttributes: string[],
+    taskType: 'generative' | 'classification' = 'generative',
+    contentType: 'text' | 'code' = 'text'
+  ): Promise<any> {
+    return this.sendCommand('evaluate_model_response', {
+      prompt,
+      response,
+      protected_attributes: protectedAttributes,
+      task_type: taskType,
+      content_type: contentType,
+    });
+  }
+
+  async evaluateBiasAdvanced(
+    content: string,
+    protectedAttributes: string[],
+    taskType: 'generative' | 'classification' = 'generative',
+    useMetricFrame: boolean = true,
+    useAif360: boolean = false,
+    metricNames?: string[],
+    contentType: 'text' | 'code' = 'text'
+  ): Promise<any> {
+    return this.sendCommand('evaluate_bias_advanced', {
+      content,
+      protected_attributes: protectedAttributes,
+      task_type: taskType,
+      use_metricframe: useMetricFrame,
+      use_aif360: useAif360,
+      metric_names: metricNames,
+      content_type: contentType,
     });
   }
 
@@ -118,6 +337,7 @@ export class PythonBridge {
   }
 
   destroy() {
+    this.isShuttingDown = true;
     if (this.process) {
       this.process.kill();
       this.process = null;

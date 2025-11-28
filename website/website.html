@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairMind MCP | Fairness for Agents</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        @import "tailwindcss";
+        
+        :root {
+            --background: oklch(96.22% 0.0569 95.61);
+            --secondary-background: oklch(100% 0 0);
+            --foreground: oklch(0% 0 0);
+            --main-foreground: oklch(0% 0 0);
+            --main: oklch(84.08% 0.1725 84.2);
+            --border: oklch(0% 0 0);
+            --ring: oklch(0% 0 0);
+            --overlay: oklch(0% 0 0 / 0.8);
+            --shadow: 4px 4px 0px 0px var(--border);
+            --neo-orange: #FF6B35;
+            --neo-white: #FFFFFA;
+            --neo-black: #121212;
+            --neo-blue: #3E92CC;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            @apply text-foreground font-medium bg-background;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            @apply font-bold;
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .shadow-hard {
+            box-shadow: 8px 8px 0px 0px var(--neo-black);
+        }
+        
+        .shadow-hard-sm {
+            box-shadow: 4px 4px 0px 0px var(--neo-black);
+        }
+    </style>
+</head>
+<body class="bg-neo-white text-neo-black min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="border-b-4 border-neo-black bg-neo-white p-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-3xl font-black tracking-tighter italic">
+                FAIRMIND<span class="text-neo-orange">_MCP</span>
+            </div>
+            <div class="hidden md:flex gap-8 font-bold text-lg">
+                <a href="#features" class="hover:underline decoration-4 underline-offset-4 decoration-neo-orange">Capabilities</a>
+                <a href="#paper" class="hover:underline decoration-4 underline-offset-4 decoration-neo-orange">Research</a>
+                <a href="https://fairmind.xyz" target="_blank" class="hover:underline decoration-4 underline-offset-4 decoration-neo-blue">Dashboard UI ↗</a>
+            </div>
+            <a href="https://github.com/adhit-r/fairmind" class="hidden md:block bg-neo-black text-neo-white px-6 py-2 font-bold border-2 border-neo-black hover:bg-neo-white hover:text-neo-black transition-all shadow-hard-sm active:translate-y-1 active:shadow-none">
+                GitHub
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="flex-grow grid md:grid-cols-2 border-b-4 border-neo-black">
+        <div class="p-8 md:p-16 flex flex-col justify-center border-b-4 md:border-b-0 md:border-r-4 border-neo-black bg-neo-orange">
+            <div class="bg-neo-black text-neo-white inline-block px-4 py-2 font-bold mb-6 self-start transform -rotate-2 border-2 border-neo-white">
+                NOW LIVE: AGENT PROTOCOL v1.0
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black leading-[0.9] mb-8 text-neo-black">
+                AUDIT<br>YOUR<br>AGENTS.
+            </h1>
+            <p class="text-xl md:text-2xl font-bold mb-12 border-l-8 border-neo-black pl-6 leading-tight">
+                The first <span class="bg-neo-white px-1">Model Context Protocol</span> wrapper for industry-standard fairness libraries. Give Claude & GPT the power to self-correct bias.
+            </p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <button class="bg-neo-black text-neo-white px-8 py-4 text-xl font-bold border-4 border-neo-black shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-hard-sm transition-all">
+                    Start Server
+                </button>
+                <button class="bg-neo-white text-neo-black px-8 py-4 text-xl font-bold border-4 border-neo-black shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-hard-sm transition-all">
+                    Read Paper
+                </button>
+            </div>
+        </div>
+
+        <!-- Terminal/Demo Area -->
+        <div class="bg-[#1a1b26] p-8 md:p-16 flex flex-col justify-center overflow-hidden relative">
+            <div class="absolute top-4 right-4 flex gap-2">
+                <div class="w-4 h-4 rounded-full bg-red-500 border-2 border-black"></div>
+                <div class="w-4 h-4 rounded-full bg-yellow-400 border-2 border-black"></div>
+                <div class="w-4 h-4 rounded-full bg-green-500 border-2 border-black"></div>
+            </div>
+            
+            <div class="code-font text-sm md:text-base text-gray-300 z-10">
+                <div class="mb-4 opacity-50"># Agent requesting fairness check via MCP</div>
+                <div class="flex gap-2">
+                    <span class="text-neo-orange">➜</span>
+                    <span class="text-blue-400">call_tool</span>
+                    <span class="text-yellow-300">"fairmind_evaluate"</span>
+                </div>
+                <div class="pl-6 mb-6 text-green-300">
+                    { input: "Nurses are gentle women..." }
+                </div>
+
+                <div class="mb-4 opacity-50"># MCP Server Response (Token Optimized)</div>
+                <div class="bg-black/30 border-l-4 border-neo-orange p-4 font-mono text-neo-white">
+                    <span class="text-gray-500">STATUS:</span> <span class="text-red-400 font-bold">FAIL</span><br>
+                    <span class="text-gray-500">METRIC:</span> GENDER_STEREOTYPE<br>
+                    <span class="text-gray-500">SCORE:</span>  0.89 <span class="text-gray-500">(High)</span><br>
+                    <span class="text-gray-500">SUGGEST:</span> [Counterfactuals Generated]<br>
+                    <span class="text-gray-500">COST:</span>   <span class="text-green-400">12 Tokens</span>
+                </div>
+
+                <div class="mt-6 flex gap-2">
+                    <span class="text-neo-orange">➜</span>
+                    <span class="text-purple-400">agent_thought</span>
+                </div>
+                <div class="pl-6 text-gray-400 italic">
+                    "Bias detected. Rewriting output using neutral terminology..."
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Features Grid -->
+    <section id="features" class="py-20 px-4 max-w-7xl mx-auto">
+        <h2 class="text-5xl font-black mb-16 text-center uppercase">Why integrate?</h2>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div class="bg-neo-white border-4 border-neo-black p-8 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <div class="w-16 h-16 bg-neo-blue border-4 border-neo-black mb-6 flex items-center justify-center text-2xl font-bold text-white">TO</div>
+                <h3 class="text-2xl font-bold mb-4">Token Optimized</h3>
+                <p class="font-medium">
+                    We don't send massive JSON blobs. Our <span class="bg-neo-orange px-1">TOON format</span> strips overhead, saving you <span class="bg-neo-orange px-1">40% on API costs</span> per audit.
+                </p>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-neo-white border-4 border-neo-black p-8 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <div class="w-16 h-16 bg-neo-orange border-4 border-neo-black mb-6 flex items-center justify-center text-2xl font-bold text-black">AN</div>
+                <h3 class="text-2xl font-bold mb-4">Agent Native</h3>
+                <p class="font-medium">
+                    Built for the <span class="bg-neo-blue text-white px-1">Model Context Protocol</span>. Works out-of-the-box with Claude Desktop, Cline, and Cursor.
+                </p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-neo-white border-4 border-neo-black p-8 shadow-hard hover:translate-y-[-4px] transition-transform">
+                <div class="w-16 h-16 bg-green-400 border-4 border-neo-black mb-6 flex items-center justify-center text-2xl font-bold text-black">RM</div>
+                <h3 class="text-2xl font-bold mb-4">Real Metrics</h3>
+                <p class="font-medium">
+                    Not just "vibes." We wrap <span class="underline decoration-2">Fairlearn</span> and <span class="underline decoration-2">AIF360</span> to provide mathematically rigorous audits. Powered by <span class="bg-neo-blue text-white px-1">LiteRT</span> for high-performance inference.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neo-black text-neo-white py-12 border-t-4 border-neo-white">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+            <div class="text-center md:text-left mb-8 md:mb-0">
+                <h4 class="text-2xl font-black italic mb-2">FAIRMIND_MCP</h4>
+                <p class="text-gray-400">Adhithya Rajasekaran © 2025</p>
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-neo-white font-bold hover:text-neo-orange">Documentation</a>
+                <a href="#" class="text-neo-white font-bold hover:text-neo-orange">Research</a>
+                <a href="#" class="text-neo-white font-bold hover:text-neo-orange">Twitter</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

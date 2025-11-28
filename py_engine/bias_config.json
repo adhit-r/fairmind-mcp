@@ -1,0 +1,36 @@
+{
+  "gender": {
+    "female": {
+      "occupations": ["nurse", "teacher", "secretary", "caregiver", "receptionist", "assistant"],
+      "traits": ["gentle", "nurturing", "caring", "emotional", "sensitive", "passive"],
+      "roles": ["mother", "wife", "daughter", "sister", "girl", "woman", "female"],
+      "code_patterns": ["femaleUser", "womanUser", "girlUser", "sheUser", "herUser"]
+    },
+    "male": {
+      "occupations": ["engineer", "doctor", "leader", "executive", "manager", "director"],
+      "traits": ["assertive", "strong", "decisive", "aggressive", "competitive", "logical"],
+      "roles": ["father", "husband", "son", "brother", "boy", "man", "male"],
+      "code_patterns": ["maleUser", "manUser", "boyUser", "heUser", "hisUser"]
+    }
+  },
+  "race": {
+    "stereotypes": ["thug", "ghetto", "exotic", "articulate", "urban", "inner-city"],
+    "microaggressions": ["you speak english well", "where are you really from", "you people"],
+    "assumptions": ["all", "every", "typical", "usually"],
+    "code_patterns": ["blackUser", "whiteUser", "asianUser", "hispanicUser", "raceUser"]
+  },
+  "age": {
+    "young": ["young", "energetic", "tech-savvy", "fresh", "dynamic", "millennial", "gen-z"],
+    "old": ["experienced", "veteran", "senior", "mature", "wise", "seasoned", "elderly"],
+    "ageist": ["too old", "too young", "over the hill", "past their prime", "set in their ways"],
+    "code_patterns": ["youngUser", "oldUser", "seniorUser", "millennialUser"]
+  },
+  "disability": {
+    "ableist_language": ["crazy", "insane", "lame", "dumb", "blind to", "deaf to"],
+    "assumptions": ["suffers from", "confined to", "wheelchair bound"],
+    "inspiration_porn": ["inspirational", "overcame their disability", "despite their disability"],
+    "code_patterns": ["disabledUser", "handicappedUser", "crippledUser"]
+  }
+}
+
+

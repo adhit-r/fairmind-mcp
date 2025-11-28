@@ -10,7 +10,7 @@ import { join } from 'path';
 const serverPath = join(process.cwd(), 'src', 'index.ts');
 
 async function testMCP() {
-  console.log('🧪 Testing FairMind MCP Server...\n');
+  console.log('Testing FairMind MCP Server...\n');
 
   const server = spawn('bun', [serverPath], {
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -29,7 +29,7 @@ async function testMCP() {
       for (const line of lines) {
         if (line.trim().startsWith('{')) {
           const response = JSON.parse(line);
-          console.log('📥 Response:', JSON.stringify(response, null, 2));
+          console.log('Response:', JSON.stringify(response, null, 2));
         }
       }
     } catch (e) {
@@ -40,7 +40,7 @@ async function testMCP() {
   server.stderr?.on('data', (data: Buffer) => {
     const msg = data.toString();
     if (!msg.includes('FairMind MCP server running')) {
-      console.error('⚠️  Server stderr:', msg);
+      console.error('Server stderr:', msg);
     }
   });
 
@@ -48,7 +48,7 @@ async function testMCP() {
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Test 1: List tools
-  console.log('\n1️⃣  Testing: List Tools');
+  console.log('\nTest 1: Testing List Tools');
   const listToolsRequest = {
     jsonrpc: '2.0',
     id: 1,
@@ -60,7 +60,7 @@ async function testMCP() {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   // Test 2: Call evaluate_bias tool
-  console.log('\n2️⃣  Testing: evaluate_bias tool');
+  console.log('\nTest 2: Testing evaluate_bias tool');
   const evaluateRequest = {
     jsonrpc: '2.0',
     id: 2,
@@ -79,7 +79,7 @@ async function testMCP() {
   await new Promise(resolve => setTimeout(resolve, 2000));
 
   // Test 3: Call generate_counterfactuals tool
-  console.log('\n3️⃣  Testing: generate_counterfactuals tool');
+  console.log('\nTest 3: Testing generate_counterfactuals tool');
   const counterfactualRequest = {
     jsonrpc: '2.0',
     id: 3,
@@ -96,8 +96,8 @@ async function testMCP() {
   server.stdin?.write(JSON.stringify(counterfactualRequest) + '\n');
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  console.log('\n✅ Tests completed!');
-  console.log('💡 Note: MCP servers communicate via JSON-RPC over stdio.');
+  console.log('\nTests completed!');
+  console.log('Note: MCP servers communicate via JSON-RPC over stdio.');
   console.log('   For full integration testing, use an MCP client like Claude Desktop.\n');
 
   server.kill();
