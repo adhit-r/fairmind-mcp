@@ -7,31 +7,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        @import "tailwindcss";
-        
         :root {
-            --background: oklch(96.22% 0.0569 95.61);
-            --secondary-background: oklch(100% 0 0);
-            --foreground: oklch(0% 0 0);
-            --main-foreground: oklch(0% 0 0);
-            --main: oklch(84.08% 0.1725 84.2);
-            --border: oklch(0% 0 0);
-            --ring: oklch(0% 0 0);
-            --overlay: oklch(0% 0 0 / 0.8);
-            --shadow: 4px 4px 0px 0px var(--border);
             --neo-orange: #FF6B35;
             --neo-white: #FFFFFA;
             --neo-black: #121212;
             --neo-blue: #3E92CC;
         }
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Space Grotesk', sans-serif;
-            @apply text-foreground font-medium bg-background;
+            background-color: var(--neo-white);
+            color: var(--neo-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         h1, h2, h3, h4, h5, h6 {
-            @apply font-bold;
+            font-weight: 700;
         }
         
         .code-font {
@@ -45,6 +44,23 @@
         .shadow-hard-sm {
             box-shadow: 4px 4px 0px 0px var(--neo-black);
         }
+        
+        .bg-neo-white { background-color: var(--neo-white); }
+        .bg-neo-black { background-color: var(--neo-black); }
+        .bg-neo-orange { background-color: var(--neo-orange); }
+        .bg-neo-blue { background-color: var(--neo-blue); }
+        
+        .text-neo-white { color: var(--neo-white); }
+        .text-neo-black { color: var(--neo-black); }
+        .text-neo-orange { color: var(--neo-orange); }
+        .text-neo-blue { color: var(--neo-blue); }
+        
+        .border-neo-black { border-color: var(--neo-black); }
+        .border-neo-white { border-color: var(--neo-white); }
+        .border-neo-orange { border-color: var(--neo-orange); }
+        
+        .decoration-neo-orange { text-decoration-color: var(--neo-orange); }
+        .decoration-neo-blue { text-decoration-color: var(--neo-blue); }
     </style>
 </head>
 <body class="bg-neo-white text-neo-black min-h-screen flex flex-col">
