@@ -106,5 +106,46 @@ If Claude doesn't call the tool:
 
 ---
 
-**TL;DR**: Yes, any natural language prompt that mentions bias checking will work! Claude is smart enough to understand your intent and call the right tool.
+## 🔄 Evaluating Claude's Own Output
+
+**Yes!** You can ask Claude to evaluate **any sentence**, including:
+- ✅ Text Claude just generated
+- ✅ Text from other sources
+- ✅ Your own text
+- ✅ Code snippets
+- ✅ Job descriptions
+- ✅ Any text you paste
+
+### Example Workflow:
+
+**Step 1: Ask Claude to generate something**
+```
+Write a job description for a software engineer position.
+```
+
+**Step 2: Ask Claude to evaluate its own output**
+```
+Now check that job description for gender bias.
+```
+
+Or in one go:
+```
+Write a job description for a software engineer, then check it for gender bias.
+```
+
+### Self-Checking Examples:
+
+```
+I just wrote: "The nurse was gentle and caring." Check this for gender bias.
+```
+
+```
+Claude, you said: "Engineers are typically analytical men." Is this biased?
+```
+
+```
+Check your previous response for any gender or race bias.
+```
+
+**TL;DR**: Yes, any natural language prompt that mentions bias checking will work! Claude is smart enough to understand your intent and call the right tool. You can evaluate Claude's own outputs, your text, or any other content.
 
