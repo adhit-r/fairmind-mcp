@@ -6,13 +6,23 @@ Analyzes git history to detect bias patterns across commits and authors.
 import os
 import subprocess
 import json
+import sys
 from typing import Dict, List, Any, Optional, Tuple
 from collections import defaultdict
 from datetime import datetime
 from core.code_auditor import evaluate_code_bias
 
 
-def run_git_command(repo_path: str, command: List[str]) -> str:
+def log_progress(message: str, progress: Optional[float] = None):
+    """Log progress to stderr (MCP clients can capture this)."""
+    if progress is not None:
+        sys.stderr.write(f"[PROGRESS] {progress:.1f}% - {message}\n")
+    else:
+        sys.stderr.write(f"[PROGRESS] {message}\n")
+    sys.stderr.flush()
+
+
+def run_git_command(repo_path: str, command: List[str], timeout: int = 60) -> str:
     """Run a git command and return output."""
     try:
         result = subprocess.run(
@@ -20,11 +30,13 @@ def run_git_command(repo_path: str, command: List[str]) -> str:
             cwd=repo_path,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=timeout,
             check=True
         )
         return result.stdout.strip()
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+    except subprocess.TimeoutExpired:
+        raise ValueError(f"Git command timed out after {timeout}s: {' '.join(command)}")
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
         raise ValueError(f"Git command failed: {e}")
 
 
@@ -106,13 +118,19 @@ def get_commit_history(
             continue
         
         # Get diff for this commit (limited to first 5000 chars for performance)
-        try:
-            diff_output = run_git_command(repo_path, [
-                'show', '--format=', commit_hash, '--', *files_changed[:10]  # Limit to 10 files
-            ])
-            diff_content = diff_output[:5000]  # Limit diff size
-        except ValueError:
-            diff_content = ""
+        # Only get diff if we have files to analyze
+        diff_content = ""
+        if files_changed:
+            try:
+                # Limit to 10 files per commit for performance
+                files_to_analyze = files_changed[:10]
+                diff_output = run_git_command(repo_path, [
+                    'show', '--format=', '--no-patch', commit_hash, '--', *files_to_analyze
+                ], timeout=10)
+                diff_content = diff_output[:5000]  # Limit diff size
+            except ValueError:
+                # If diff fails, continue without it (message analysis still works)
+                diff_content = ""
         
         commits.append({
             'hash': commit_hash,
@@ -311,6 +329,7 @@ def analyze_repository(
         exclude_paths = ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/']
     
     # Get commit history
+    log_progress("Extracting commit history from repository...")
     commits = get_commit_history(repository_path, max_commits, file_extensions, exclude_paths)
     
     if not commits:
@@ -319,15 +338,25 @@ def analyze_repository(
             'repository_path': repository_path,
         }
     
+    log_progress(f"Found {len(commits)} commits to analyze")
+    
     # Analyze each commit for bias
     analyzed_commits = []
-    for commit in commits:
+    total_commits = len(commits)
+    
+    for idx, commit in enumerate(commits):
         try:
+            # Progress reporting every 10 commits or at milestones
+            if idx % 10 == 0 or idx == total_commits - 1:
+                progress = (idx + 1) / total_commits * 100
+                log_progress(f"Analyzing commit {idx + 1}/{total_commits} ({commit['hash'][:8]})", progress)
+            
             bias_analysis = analyze_commit_bias(commit, protected_attributes)
             commit['bias_analysis'] = bias_analysis
             analyzed_commits.append(commit)
         except Exception as e:
             # Skip commits that fail analysis
+            log_progress(f"Warning: Failed to analyze commit {commit['hash'][:8]}: {str(e)}")
             continue
     
     # Group commits by author
@@ -344,16 +373,27 @@ def analyze_repository(
             }
     
     # Generate author scorecards (only for authors with enough commits)
+    log_progress("Generating author scorecards...")
     author_scorecards = []
-    for author_key, commits_list in author_commits.items():
-        if len(commits_list) >= min_commits_per_author:
-            scorecard = generate_author_scorecard(
-                commits_list,
-                author_info_map[author_key],
-                protected_attributes
-            )
-            if scorecard:
-                author_scorecards.append(scorecard)
+    authors_to_process = [
+        (key, commits_list) 
+        for key, commits_list in author_commits.items() 
+        if len(commits_list) >= min_commits_per_author
+    ]
+    
+    for idx, (author_key, commits_list) in enumerate(authors_to_process):
+        scorecard = generate_author_scorecard(
+            commits_list,
+            author_info_map[author_key],
+            protected_attributes
+        )
+        if scorecard:
+            author_scorecards.append(scorecard)
+        
+        if len(authors_to_process) > 10 and idx % 5 == 0:
+            log_progress(f"Processed {idx + 1}/{len(authors_to_process)} authors")
+    
+    log_progress("Analysis complete!")
     
     # Sort by bias score (highest first)
     author_scorecards.sort(key=lambda x: x['overall_bias_score'], reverse=True)
