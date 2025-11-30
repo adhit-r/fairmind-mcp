@@ -1,55 +1,61 @@
-# FairMind MCP - Use Case Guide
+# FairMind Use Cases - Practical Examples
 
-Practical examples for using FairMind MCP in real-world scenarios.
+## Overview
+
+FairMind MCP can be used in many real-world scenarios. This guide provides practical examples for common use cases.
+
+---
 
 ## 1. Self-Checking: Have Claude Review Its Own Outputs
 
 ### Use Case
 Before Claude sends a response, have it check its own text for bias to ensure fair and inclusive communication.
 
-### Example Workflows
+### Example Workflow
 
-#### Workflow A: Two-Step Self-Check
+**Scenario 1: Job Description Generation**
 ```
-You: Write a job description for a software engineer position.
+User: Write a job description for a software engineer position.
 
 Claude: [Generates job description]
 
-You: Now check that job description for gender bias.
+User: Now check that job description for gender and race bias.
+
+Claude: [Uses evaluate_bias tool, finds issues, suggests improvements]
 ```
 
-#### Workflow B: Single Prompt with Self-Check
+**Scenario 2: Content Generation with Self-Review**
 ```
-You: Write a job description for a software engineer, then immediately check it for gender and race bias.
+User: Write a blog post about leadership, then check it for gender bias.
+
+Claude: [Writes post, then automatically checks it]
 ```
 
-#### Workflow C: Review Previous Response
+**Scenario 3: Real-Time Self-Checking**
 ```
-You: Check your previous response for any gender, race, or age bias.
-```
+User: You just wrote: "Engineers are typically analytical men." 
+      Check this for gender bias.
 
-#### Workflow D: Iterative Improvement
-```
-You: I need you to write a product description, but first check it for bias before sending it to me.
+Claude: [Uses evaluate_bias tool, identifies bias, corrects]
 ```
 
 ### Best Practices
-- ✅ Ask Claude to check its own outputs before finalizing
+- ✅ Ask Claude to check its outputs before finalizing
 - ✅ Specify which attributes to check (gender, race, age, disability)
-- ✅ Request counterfactuals if bias is found
-- ✅ Use for sensitive content (job postings, marketing, communications)
+- ✅ Use counterfactuals to improve biased text
+- ✅ Review bias findings and iterate
 
 ### Example Prompts
 ```
-Write a customer service email, then check it for gender bias before sending.
+After you write that, check it for gender bias.
 ```
 
 ```
-Generate a product description and verify it's free of racial stereotypes.
+Before you send that, evaluate it for any bias.
 ```
 
 ```
-Create a team announcement, then evaluate it for age and disability bias.
+Check your previous response for gender and race bias.
 ```
 
 ---
@@ -57,52 +63,53 @@ Create a team announcement, then evaluate it for age and disability bias.
 ## 2. Content Review: Check Your Writing Before Publishing
 
 ### Use Case
-Review your own writing (emails, articles, social media posts) for bias before publishing or sending.
+Review your own writing (emails, articles, social media posts) for bias before publishing.
 
-### Example Workflows
+### Example Workflow
 
-#### Workflow A: Pre-Publish Review
+**Scenario 1: Blog Post Review**
 ```
-You: I wrote this blog post. Check it for bias:
-[Paste your content]
+User: I wrote this blog post. Check it for bias:
+      "Great leaders are decisive and assertive. They make tough 
+       decisions quickly and don't second-guess themselves."
 
-Claude: [Uses evaluate_bias tool and provides feedback]
-```
-
-#### Workflow B: Email Review
-```
-You: Review this email for gender bias before I send it:
-"Dear team, we need a strong leader who can take charge..."
+Claude: [Uses evaluate_bias tool, finds gender stereotypes]
 ```
 
-#### Workflow C: Social Media Check
+**Scenario 2: Email Review**
 ```
-You: Is this tweet biased? "Great to see more women in tech! They bring a nurturing perspective."
+User: Check this email for bias before I send it:
+      "We need someone who can work long hours and handle 
+       pressure. The ideal candidate is young and energetic."
+
+Claude: [Identifies age bias, suggests alternatives]
 ```
 
-#### Workflow D: Document Review
+**Scenario 3: Social Media Post**
 ```
-You: I'm writing a company policy document. Check this section for any bias:
-[Paste section]
+User: Is this tweet biased? "Nurses are caring women who 
+      always put patients first."
+
+Claude: [Detects gender bias, provides counterfactuals]
 ```
 
 ### Best Practices
-- ✅ Check all external-facing content
-- ✅ Review for multiple attributes simultaneously
-- ✅ Get counterfactuals for biased phrases
-- ✅ Use for sensitive topics (hiring, policies, public statements)
+- ✅ Check all public-facing content
+- ✅ Review for multiple attributes (gender, race, age, disability)
+- ✅ Use counterfactuals to improve biased phrases
+- ✅ Consider intersectional bias (multiple attributes together)
 
 ### Example Prompts
 ```
-Check this job posting before I publish it: [content]
+Check this for bias: "[your text]"
 ```
 
 ```
-Review this customer communication for any bias: [content]
+Review this email for gender and race bias: "[email text]"
 ```
 
 ```
-Is this product description inclusive? [content]
+Is this blog post biased? "[post content]"
 ```
 
 ---
@@ -110,74 +117,69 @@ Is this product description inclusive? [content]
 ## 3. Code Review: Check Code Comments and Variable Names
 
 ### Use Case
-Review code for biased comments, variable names, and algorithmic bias before merging.
+Review code for bias in comments, variable names, documentation, and algorithmic decisions.
 
-### Example Workflows
+### Example Workflow
 
-#### Workflow A: Comment Review
+**Scenario 1: Code Comment Review**
 ```
-You: Check this code for gender bias in comments:
-```python
-# Nurses are gentle women who care for patients
-def assign_role(user):
-    if user.gender == 'female':
-        return 'nurse'
-    return 'engineer'
-```
-```
+User: Check this code for bias:
+      ```python
+      # Nurses are gentle women who care for patients
+      def assign_role(user):
+          if user.gender == 'female':
+              return 'nurse'
+          return 'engineer'
+      ```
 
-#### Workflow B: Variable Name Review
-```
-You: Review these variable names for bias:
-```javascript
-const blacklist = ['admin', 'user'];
-const masterNode = getPrimaryNode();
-```
+Claude: [Uses evaluate_bias with content_type="code", finds issues]
 ```
 
-#### Workflow C: Algorithmic Bias Check
+**Scenario 2: Variable Name Review**
 ```
-You: Check this algorithm for gender bias:
-```python
-def calculate_salary(employee):
-    if employee.gender == 'female':
-        return base_salary * 0.9  # Women get 10% less
-    return base_salary
-```
+User: Review these variable names for bias:
+      ```javascript
+      const blacklist = ['bad', 'evil'];
+      const masterBranch = 'main';
+      ```
+
+Claude: [Identifies problematic terminology]
 ```
 
-#### Workflow D: Full File Review
+**Scenario 3: Algorithmic Bias Check**
 ```
-You: Analyze this entire file for code bias:
-[Paste file content]
+User: Check this algorithm for gender bias:
+      ```python
+      def calculate_salary(experience, gender):
+          base = 50000
+          if gender == 'male':
+              return base * 1.2
+          return base
+      ```
+
+Claude: [Detects algorithmic bias, explains impact]
 ```
 
 ### Best Practices
 - ✅ Use `content_type: "code"` for code analysis
-- ✅ Check comments, variable names, and logic
-- ✅ Review for algorithmic bias (discriminatory logic)
-- ✅ Use in PR reviews and code audits
+- ✅ Check comments, variable names, and documentation
+- ✅ Review algorithmic decisions for fairness
+- ✅ Use repository analysis for codebase-wide patterns
 
 ### Example Prompts
 ```
-Check this code for gender and race bias in comments and variable names:
-[code block]
+Check this code for gender bias:
+```python
+[your code]
+```
 ```
 
 ```
-Review this function for algorithmic bias:
-[code block]
+Review this function for any bias in comments or logic.
 ```
 
 ```
-Analyze this entire file for any bias patterns:
-[file content]
-```
-
-### Repository-Level Code Review
-```
-You: Analyze this repository for code bias patterns across all commits:
-/path/to/repository
+Analyze this repository for code bias patterns.
 ```
 
 ---
@@ -185,155 +187,166 @@ You: Analyze this repository for code bias patterns across all commits:
 ## 4. Team Feedback: Review Team Communications
 
 ### Use Case
-Review team communications (Slack messages, emails, documentation) for bias before sending.
+Review team communications (Slack messages, emails, documentation) for bias to promote inclusive communication.
 
-### Example Workflows
+### Example Workflow
 
-#### Workflow A: Slack Message Review
+**Scenario 1: Team Email Review**
 ```
-You: Check this Slack message for bias before I send it:
-"Hey team, we need someone who can work late hours. Young people usually handle this better."
-```
+User: Check this team email for bias:
+      "Hi team, we need someone who can work late nights. 
+       Looking for a young, energetic developer who can 
+       handle the pressure."
 
-#### Workflow B: Team Email Review
-```
-You: Review this team email for gender bias:
-"Hi everyone, we're looking for a strong, assertive leader..."
+Claude: [Identifies age bias and ableism, suggests improvements]
 ```
 
-#### Workflow C: Documentation Review
+**Scenario 2: Documentation Review**
 ```
-You: Check our team documentation for any biased language:
-[Paste documentation]
+User: Review our team documentation for bias:
+      "Our team consists of experienced engineers and 
+       junior developers. The senior engineers are typically 
+       older and more set in their ways."
+
+Claude: [Finds age stereotypes, provides alternatives]
 ```
 
-#### Workflow D: Meeting Notes Review
+**Scenario 3: Meeting Notes Review**
 ```
-You: Review these meeting notes for bias:
-[Paste notes]
+User: Check these meeting notes for bias:
+      "Sarah presented well, but we need someone more 
+       assertive for this role. Maybe a male candidate 
+       would be better."
+
+Claude: [Detects gender bias, explains why it's problematic]
 ```
 
 ### Best Practices
-- ✅ Check communications before sending to team
-- ✅ Review for multiple attributes (gender, race, age, disability)
-- ✅ Use for sensitive topics (hiring, promotions, feedback)
-- ✅ Get counterfactuals for improvement
+- ✅ Review communications before sending to large groups
+- ✅ Check for unconscious bias in feedback
+- ✅ Use counterfactuals to improve biased language
+- ✅ Consider intersectional bias (multiple attributes)
 
 ### Example Prompts
 ```
-Check this team announcement for any bias:
-[content]
+Check this team message for bias: "[message]"
 ```
 
 ```
-Review this feedback I'm giving to a team member:
-[content]
+Review this feedback for gender and race bias.
 ```
 
 ```
-Is this team communication inclusive?
-[content]
+Is this communication inclusive? "[text]"
 ```
 
 ---
 
-## 5. Advanced Use Cases
+## 5. Repository-Wide Analysis
 
-### Batch Evaluation
-```
-You: Check all of these job descriptions for bias:
-1. "We need a strong leader..."
-2. "Looking for someone nurturing..."
-3. "Seeking an assertive manager..."
-```
+### Use Case
+Analyze entire codebases for bias patterns across commits and authors.
 
-### Multi-Attribute Analysis
-```
-You: Check this text for gender, race, and age bias simultaneously:
-[content]
-```
+### Example Workflow
 
-### Counterfactual Generation
+**Scenario 1: Team Codebase Review**
 ```
-You: This phrase has gender bias: "The nurse was gentle." Generate alternatives.
+User: Analyze our repository for bias patterns:
+      /path/to/repository
+
+Claude: [Uses analyze_repository_bias tool, provides scorecards]
 ```
 
-### Repository Analysis
+**Scenario 2: Pre-Merge Review**
 ```
-You: Analyze our entire codebase for bias patterns and show me which authors need training:
-/path/to/repository
+User: Before we merge this PR, check the repository for 
+      any new bias patterns introduced.
+
+Claude: [Analyzes recent commits, identifies issues]
+```
+
+**Scenario 3: Team Training**
+```
+User: Show me which team members might benefit from 
+      bias awareness training based on their code patterns.
+
+Claude: [Provides author scorecards, identifies patterns]
+```
+
+### Best Practices
+- ✅ Use anonymization for privacy (when available)
+- ✅ Focus on patterns, not individuals
+- ✅ Use for improvement, not blame
+- ✅ Review scorecards regularly
+
+### Example Prompts
+```
+Analyze this repository for code bias: /path/to/repo
+```
+
+```
+Check our codebase for gender bias patterns.
+```
+
+```
+Show me bias trends in our repository over time.
 ```
 
 ---
 
-## Quick Reference
+## Quick Reference: Which Tool to Use
 
-### Protected Attributes
-- `gender` - Gender stereotypes and bias
-- `race` - Racial stereotypes and bias
-- `age` - Age-related bias
-- `disability` - Disability-related bias
-
-### Content Types
-- `text` - Natural language content (default)
-- `code` - Source code (comments, variables, logic)
-
-### Task Types
-- `generative` - For generated text (default)
-- `classification` - For classification tasks
-
-### Common Prompts
-```
-Check [content] for [attribute] bias
-Analyze [code] for bias
-Review [text] before publishing
-Generate counterfactuals for: [phrase]
-Analyze repository: [path]
-```
+| Use Case | Tool | Content Type |
+|----------|------|--------------|
+| Text evaluation | `evaluate_bias` | `text` |
+| Code evaluation | `evaluate_bias` | `code` |
+| Multiple attributes | `evaluate_bias_advanced` | `text` or `code` |
+| Get alternatives | `generate_counterfactuals` | `text` |
+| Repository analysis | `analyze_repository_bias` | N/A |
+| Batch evaluation | `evaluate_model_outputs` | `text` or `code` |
 
 ---
 
 ## Tips for Best Results
 
-1. **Be Specific**: Mention which attributes to check
-2. **Provide Context**: Explain what the content is for
-3. **Request Counterfactuals**: Ask for alternatives if bias is found
-4. **Use Code Type**: Specify `content_type: "code"` for code analysis
-5. **Batch When Possible**: Check multiple items at once
-6. **Iterate**: Use feedback to improve content
+1. **Be Specific**: Mention which attributes to check (gender, race, age, disability)
+2. **Provide Context**: Explain what the content is for (job posting, code comment, etc.)
+3. **Use Counterfactuals**: When bias is found, ask for alternatives
+4. **Iterate**: Review findings and improve the content
+5. **Check Multiple Attributes**: Use `evaluate_bias_advanced` for intersectional analysis
 
 ---
 
-## Example Workflows
+## Example Conversation Flow
 
-### Workflow 1: Job Posting Review
 ```
-1. Write job posting
-2. Check for gender bias
-3. Check for race bias
-4. Get counterfactuals for biased phrases
-5. Revise and finalize
-```
+User: Write a job description for a software engineer.
 
-### Workflow 2: Code PR Review
-```
-1. Submit PR
-2. Run repository analysis
-3. Check specific files for code bias
-4. Review author scorecard
-5. Address issues before merge
-```
+Claude: [Generates job description]
 
-### Workflow 3: Team Communication
-```
-1. Draft message
-2. Check for bias
-3. Get counterfactuals
-4. Revise
-5. Send
+User: Check that for gender bias.
+
+Claude: [Uses evaluate_bias tool]
+        I found some potential gender bias. The phrase 
+        "assertive leader" may favor certain gender stereotypes.
+        
+        Status: FAIL
+        Metrics: [detailed findings]
+
+User: Generate counterfactuals for "assertive leader".
+
+Claude: [Uses generate_counterfactuals tool]
+        Here are some alternatives:
+        - "effective leader"
+        - "confident leader"
+        - "strong communicator"
 ```
 
 ---
 
-**Remember**: FairMind MCP works with natural language. You don't need exact syntax - just describe what you want to check!
+## Next Steps
 
+1. Try these use cases with Claude Desktop or Cursor
+2. Document what works well for your team
+3. Create custom prompts for your specific needs
+4. Share feedback on what's most useful
