@@ -70,6 +70,9 @@ class AnalyzeRepositoryBiasRequest(BaseRequest):
     min_commits_per_author: int = 5
     file_extensions: List[str] = []
     exclude_paths: List[str] = []
+    anonymize_authors: bool = False
+    exclude_author_names: bool = False
+    pattern_only_mode: bool = False
 
 RequestUnion = Union[
     EvaluateBiasRequest,

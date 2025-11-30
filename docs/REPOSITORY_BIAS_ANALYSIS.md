@@ -44,6 +44,51 @@ The `analyze_repository_bias` tool analyzes entire git repositories to detect bi
 }
 ```
 
+### Privacy & Anonymization
+
+For team settings where privacy is important, use anonymization options:
+
+```typescript
+{
+  "repository_path": "/path/to/repo",
+  "protected_attributes": ["gender", "race"],
+  "anonymize_authors": true,      // Hash emails, use generic names (e.g., "Author-abc123")
+  "exclude_author_names": true,    // Replace all names with "Anonymous"
+  "pattern_only_mode": false      // Focus on patterns, minimize author info
+}
+```
+
+**Anonymization Options:**
+
+- **`anonymize_authors: true`**: 
+  - Replaces emails with hashed IDs (e.g., `abc123@anonymous.local`)
+  - Replaces names with generic identifiers (e.g., `Author-abc123`)
+  - Maintains analysis capability while protecting privacy
+  - Each author gets a unique `author_id` for tracking
+
+- **`exclude_author_names: true`**:
+  - Replaces all author names with "Anonymous"
+  - Use with `anonymize_authors: true` for maximum privacy
+  - Still provides bias analysis and patterns
+
+- **`pattern_only_mode: true`**:
+  - Focuses analysis on bias patterns only
+  - Minimizes author-specific information
+  - Useful for team-wide analysis without individual attribution
+
+**Example with Anonymization:**
+
+```json
+{
+  "author_name": "Anonymous",
+  "author_email": "a570fee75a81@anonymous.local",
+  "author_id": "a570fee75a81",
+  "total_commits": 150,
+  "overall_bias_score": 65.3,
+  ...
+}
+```
+
 ## Output Format
 
 ### Author Scorecard
@@ -176,8 +221,22 @@ You can integrate this into your CI/CD pipeline:
 
 ## Privacy Considerations
 
-- Author emails are included in results
-- Consider anonymizing results before sharing
-- Use for internal team improvement, not public shaming
-- Focus on patterns, not individuals
+- **Default**: Author emails and names are included in results
+- **Anonymization**: Use `anonymize_authors: true` to protect privacy
+- **Team Settings**: Use `exclude_author_names: true` for maximum privacy
+- **Best Practice**: Use for internal team improvement, not public shaming
+- **Focus**: Emphasize patterns and improvement, not individual blame
+
+### When to Use Anonymization
+
+✅ **Use anonymization when:**
+- Sharing results with external stakeholders
+- Conducting team-wide analysis
+- Generating reports for compliance
+- Protecting developer privacy
+
+❌ **Don't use anonymization when:**
+- Individual feedback is needed
+- Direct communication with authors is required
+- Author attribution is important for context
 

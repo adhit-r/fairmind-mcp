@@ -7,10 +7,51 @@ import os
 import subprocess
 import json
 import sys
+import hashlib
 from typing import Dict, List, Any, Optional, Tuple
 from collections import defaultdict
 from datetime import datetime
 from core.code_auditor import evaluate_code_bias
+
+
+def hash_email(email: str) -> str:
+    """Hash an email address for anonymization."""
+    return hashlib.sha256(email.encode()).hexdigest()[:12]
+
+
+def anonymize_author_info(
+    author_name: str,
+    author_email: str,
+    anonymize_authors: bool,
+    exclude_author_names: bool
+) -> Dict[str, str]:
+    """
+    Anonymize author information based on settings.
+    
+    Returns:
+    - name: Original name, "Anonymous", or hashed ID
+    - email: Original email, hashed email, or "anonymous@example.com"
+    - author_id: Unique identifier (hashed email)
+    """
+    author_id = hash_email(author_email)
+    
+    if exclude_author_names:
+        name = "Anonymous"
+    elif anonymize_authors:
+        name = f"Author-{author_id}"
+    else:
+        name = author_name
+    
+    if anonymize_authors:
+        email = f"{author_id}@anonymous.local"
+    else:
+        email = author_email
+    
+    return {
+        'name': name,
+        'email': email,
+        'author_id': author_id,
+    }
 
 
 def log_progress(message: str, progress: Optional[float] = None):
@@ -199,7 +240,9 @@ def analyze_commit_bias(
 def generate_author_scorecard(
     author_commits: List[Dict[str, Any]],
     author_info: Dict[str, str],
-    protected_attributes: List[str]
+    protected_attributes: List[str],
+    anonymize_authors: bool = False,
+    exclude_author_names: bool = False
 ) -> Dict[str, Any]:
     """
     Generate a bias scorecard for a single author.
@@ -291,20 +334,34 @@ def generate_author_scorecard(
     if len(explanations) > 2:
         recommendations.append("Multiple bias types detected - comprehensive bias audit recommended")
     
-    return {
-        'author_name': author_info['name'],
-        'author_email': author_info['email'],
+    # Anonymize author info if requested
+    anonymized_info = anonymize_author_info(
+        author_info['name'],
+        author_info['email'],
+        anonymize_authors,
+        exclude_author_names
+    )
+    
+    scorecard = {
+        'author_name': anonymized_info['name'],
+        'author_email': anonymized_info['email'],
+        'author_id': anonymized_info['author_id'],
         'total_commits': total_commits,
         'overall_bias_score': round(overall_score, 1),
         'bias_level': bias_level,
         'severity': severity,
         'attribute_scores': attribute_scores,
-        'attribute_patterns': dict(attribute_patterns),
         'explanations': explanations,
         'recommendations': recommendations,
         'first_commit': author_commits[0]['date'] if author_commits else None,
         'last_commit': author_commits[-1]['date'] if author_commits else None,
     }
+    
+    # Only include patterns if not in pattern-only mode (patterns might reveal identity)
+    # For now, always include patterns, but could be filtered later
+    scorecard['attribute_patterns'] = dict(attribute_patterns)
+    
+    return scorecard
 
 
 def analyze_repository(
@@ -313,7 +370,10 @@ def analyze_repository(
     max_commits: int = 0,
     min_commits_per_author: int = 5,
     file_extensions: List[str] = None,
-    exclude_paths: List[str] = None
+    exclude_paths: List[str] = None,
+    anonymize_authors: bool = False,
+    exclude_author_names: bool = False,
+    pattern_only_mode: bool = False
 ) -> Dict[str, Any]:
     """
     Main function to analyze repository for bias patterns.
@@ -385,7 +445,9 @@ def analyze_repository(
         scorecard = generate_author_scorecard(
             commits_list,
             author_info_map[author_key],
-            protected_attributes
+            protected_attributes,
+            anonymize_authors,
+            exclude_author_names
         )
         if scorecard:
             author_scorecards.append(scorecard)
@@ -394,6 +456,10 @@ def analyze_repository(
             log_progress(f"Processed {idx + 1}/{len(authors_to_process)} authors")
     
     log_progress("Analysis complete!")
+    
+    # Add anonymization metadata
+    if anonymize_authors or exclude_author_names:
+        log_progress("Note: Author information has been anonymized for privacy.")
     
     # Sort by bias score (highest first)
     author_scorecards.sort(key=lambda x: x['overall_bias_score'], reverse=True)

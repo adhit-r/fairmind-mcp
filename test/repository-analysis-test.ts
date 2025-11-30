@@ -29,7 +29,10 @@ async function testRepositoryAnalysis() {
       50, // Limit to last 50 commits for testing
       3,  // Minimum 3 commits per author
       ['.ts', '.py', '.js'], // Only analyze code files
-      ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/', '.venv/']
+      ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/', '.venv/'],
+      false, // anonymize_authors
+      false, // exclude_author_names
+      false  // pattern_only_mode
     );
     
     const endTime = performance.now();

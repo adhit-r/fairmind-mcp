@@ -40,6 +40,21 @@ export const analyzeRepositoryBiasTool: Tool = {
         description: 'Paths to exclude from analysis (e.g., ["node_modules/", "vendor/", ".git/"])',
         default: ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/'],
       },
+      anonymize_authors: {
+        type: 'boolean',
+        description: 'If true, replace author emails with hashed IDs and use generic names (e.g., "Author-abc123"). Protects privacy while maintaining analysis capability.',
+        default: false,
+      },
+      exclude_author_names: {
+        type: 'boolean',
+        description: 'If true, replace all author names with "Anonymous". Use with anonymize_authors for maximum privacy.',
+        default: false,
+      },
+      pattern_only_mode: {
+        type: 'boolean',
+        description: 'If true, focus analysis on bias patterns only, minimizing author-specific information. Useful for team-wide analysis without individual attribution.',
+        default: false,
+      },
     },
     required: ['repository_path', 'protected_attributes'],
   },
@@ -55,7 +70,10 @@ export async function handleAnalyzeRepositoryBias(
     args.max_commits || 0,
     args.min_commits_per_author || 5,
     args.file_extensions || [],
-    args.exclude_paths || ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/']
+    args.exclude_paths || ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/'],
+    args.anonymize_authors || false,
+    args.exclude_author_names || false,
+    args.pattern_only_mode || false
   );
 }
 

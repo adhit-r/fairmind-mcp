@@ -360,7 +360,10 @@ export class PythonBridge {
     maxCommits: number = 0,
     minCommitsPerAuthor: number = 5,
     fileExtensions: string[] = [],
-    excludePaths: string[] = []
+    excludePaths: string[] = [],
+    anonymizeAuthors: boolean = false,
+    excludeAuthorNames: boolean = false,
+    patternOnlyMode: boolean = false
   ): Promise<any> {
     return this.sendCommand('analyze_repository_bias', {
       repository_path: repositoryPath,
@@ -369,6 +372,9 @@ export class PythonBridge {
       min_commits_per_author: minCommitsPerAuthor,
       file_extensions: fileExtensions,
       exclude_paths: excludePaths,
+      anonymize_authors: anonymizeAuthors,
+      exclude_author_names: excludeAuthorNames,
+      pattern_only_mode: patternOnlyMode,
     }, 300000); // 5 minute timeout for large repos
   }
 

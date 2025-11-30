@@ -16,6 +16,7 @@
     "test:enhanced-metrics": "bun run test/test-enhanced-metrics.ts",
     "test:benchmark": "bun run test/benchmark.ts",
     "test:repository": "bun run test/repository-analysis-test.ts",
+    "test:anonymization": "bun run test/repository-anonymization-test.ts",
     "test:verify": "bun run test/mcp-server-verification.ts",
     "test:all": "bun run test:codec && bun run test:auditor && bun run test:inference && bun run test && bun run test:enhanced-metrics"
   },

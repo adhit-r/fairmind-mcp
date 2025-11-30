@@ -28,6 +28,9 @@ def handle_analyze_repository_bias(req: AnalyzeRepositoryBiasRequest) -> Dict[st
         min_commits_per_author=req.min_commits_per_author,
         file_extensions=req.file_extensions,
         exclude_paths=req.exclude_paths,
+        anonymize_authors=req.anonymize_authors,
+        exclude_author_names=req.exclude_author_names,
+        pattern_only_mode=req.pattern_only_mode,
     )
     return {'result': result}
 
