@@ -11,7 +11,14 @@ import hashlib
 from typing import Dict, List, Any, Optional, Tuple
 from collections import defaultdict
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.code_auditor import evaluate_code_bias
+from core.repository_cache import (
+    get_cache_key,
+    load_cached_analysis,
+    save_cached_analysis,
+    get_last_commit_hash,
+)
 
 
 def hash_email(email: str) -> str:
@@ -400,24 +407,56 @@ def analyze_repository(
     
     log_progress(f"Found {len(commits)} commits to analyze")
     
-    # Analyze each commit for bias
+    # Check cache first
+    cache_key = get_cache_key(repository_path, max_commits, file_extensions, exclude_paths)
+    cached_result = load_cached_analysis(cache_key, repository_path)
+    
+    if cached_result:
+        log_progress("Using cached analysis results")
+        return cached_result
+    
+    # Analyze each commit for bias (with parallel processing)
     analyzed_commits = []
     total_commits = len(commits)
     
-    for idx, commit in enumerate(commits):
+    # Use parallel processing for commit analysis
+    max_workers = min(4, os.cpu_count() or 1)  # Limit to 4 workers to avoid overwhelming system
+    log_progress(f"Analyzing {total_commits} commits with {max_workers} parallel workers...")
+    
+    def analyze_single_commit(commit_data: Tuple[int, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Analyze a single commit (for parallel processing)."""
+        idx, commit = commit_data
         try:
-            # Progress reporting every 10 commits or at milestones
-            if idx % 10 == 0 or idx == total_commits - 1:
-                progress = (idx + 1) / total_commits * 100
-                log_progress(f"Analyzing commit {idx + 1}/{total_commits} ({commit['hash'][:8]})", progress)
-            
             bias_analysis = analyze_commit_bias(commit, protected_attributes)
             commit['bias_analysis'] = bias_analysis
-            analyzed_commits.append(commit)
+            return commit
         except Exception as e:
-            # Skip commits that fail analysis
             log_progress(f"Warning: Failed to analyze commit {commit['hash'][:8]}: {str(e)}")
-            continue
+            return None
+    
+    # Process commits in parallel
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_commit = {
+            executor.submit(analyze_single_commit, (idx, commit)): (idx, commit)
+            for idx, commit in enumerate(commits)
+        }
+        
+        # Collect results as they complete
+        completed = 0
+        for future in as_completed(future_to_commit):
+            completed += 1
+            # Progress reporting every 10 commits or at milestones
+            if completed % 10 == 0 or completed == total_commits:
+                progress = (completed / total_commits) * 100
+                log_progress(f"Analyzing commit {completed}/{total_commits} ({progress:.1f}%)", progress)
+            
+            result = future.result()
+            if result:
+                analyzed_commits.append(result)
+    
+    # Sort commits back to original order (by date)
+    analyzed_commits.sort(key=lambda c: c.get('date', ''))
     
     # Group commits by author
     author_commits = defaultdict(list)
@@ -479,17 +518,24 @@ def analyze_repository(
             'failure_rate': attr_fail_count / total_commits_analyzed if total_commits_analyzed > 0 else 0,
         }
     
-    return {
+    # Build final result
+    result = {
         'repository_path': repository_path,
         'analysis_summary': {
             'total_commits_analyzed': total_commits_analyzed,
             'total_authors': total_authors,
             'protected_attributes': protected_attributes,
             'analysis_date': datetime.now().isoformat(),
+            'cache_key': cache_key,
         },
         'repository_bias_summary': repo_bias_summary,
         'author_scorecards': author_scorecards,
         'top_biased_authors': author_scorecards[:10],  # Top 10
         'least_biased_authors': list(reversed(author_scorecards[-10:])),  # Bottom 10
     }
+    
+    # Save to cache
+    save_cached_analysis(cache_key, repository_path, result)
+    
+    return result
 
