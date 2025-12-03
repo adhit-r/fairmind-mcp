@@ -49,7 +49,3 @@ _site/
 
 # Archive folder (legacy/backup files)
 archive/
-
-
-/docs/
-# Note: docs/ folder is tracked (remove from ignore if needed)
