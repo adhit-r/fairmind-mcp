@@ -16,6 +16,10 @@
 ### Performance & Testing
 - **[Performance Optimizations](./PERFORMANCE_OPTIMIZATIONS.md)** - Caching, parallel processing, benchmarks
 - **[Benchmarking](./BENCHMARKING.md)** - How to run performance benchmarks
+- **[Real-World Testing](./REAL_WORLD_TESTING.md)** - Comprehensive testing guide
+
+### Configuration
+- **[Bias Parameters](./BIAS_PARAMETERS.md)** - Configurable bias detection parameters
 
 ### Legacy Documentation
 Legacy and redundant documentation has been moved to `archive/docs/` for reference.
