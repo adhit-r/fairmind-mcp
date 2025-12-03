@@ -18,6 +18,8 @@ from core.repository_cache import (
     load_cached_analysis,
     save_cached_analysis,
     get_last_commit_hash,
+    get_cached_commit_analyses,
+    get_last_analyzed_commit_hash,
 )
 
 
@@ -92,7 +94,8 @@ def get_commit_history(
     repo_path: str,
     max_commits: int = 0,
     file_extensions: List[str] = None,
-    exclude_paths: List[str] = None
+    exclude_paths: List[str] = None,
+    since_commit: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """
     Extract commit history from git repository.
@@ -116,10 +119,16 @@ def get_commit_history(
     limit = f"-{max_commits}" if max_commits > 0 else ""
     log_format = "%H|%an|%ae|%ai|%s"
     
+    git_cmd = ['log', '--pretty=format:' + log_format, '--name-only']
+    
+    # For incremental analysis, only get commits after the last analyzed commit
+    if since_commit:
+        git_cmd.append(f"{since_commit}..HEAD")
+    elif limit:
+        git_cmd.append(limit)
+    
     try:
-        log_output = run_git_command(repo_path, [
-            'log', '--pretty=format:' + log_format, '--name-only', limit
-        ])
+        log_output = run_git_command(repo_path, git_cmd)
     except ValueError:
         return []
     
@@ -395,9 +404,19 @@ def analyze_repository(
     if exclude_paths is None:
         exclude_paths = ['node_modules/', 'vendor/', '.git/', 'dist/', 'build/']
     
-    # Get commit history
-    log_progress("Extracting commit history from repository...")
-    commits = get_commit_history(repository_path, max_commits, file_extensions, exclude_paths)
+    # Get commit history (only new commits if incremental)
+    if use_incremental:
+        log_progress("Extracting new commits since last analysis...")
+        commits = get_commit_history(
+            repository_path, 
+            max_commits, 
+            file_extensions, 
+            exclude_paths,
+            since_commit=last_analyzed_commit
+        )
+    else:
+        log_progress("Extracting commit history from repository...")
+        commits = get_commit_history(repository_path, max_commits, file_extensions, exclude_paths)
     
     if not commits:
         return {
@@ -411,9 +430,20 @@ def analyze_repository(
     cache_key = get_cache_key(repository_path, max_commits, file_extensions, exclude_paths)
     cached_result = load_cached_analysis(cache_key, repository_path)
     
+    # If cache is fully valid (no new commits), return it
     if cached_result:
         log_progress("Using cached analysis results")
         return cached_result
+    
+    # Check for incremental analysis opportunity
+    last_analyzed_commit = get_last_analyzed_commit_hash(cache_key)
+    cached_commits = get_cached_commit_analyses(cache_key) if last_analyzed_commit else {}
+    
+    # Determine if we should do incremental analysis
+    use_incremental = bool(last_analyzed_commit and cached_commits)
+    
+    if use_incremental:
+        log_progress(f"Incremental analysis: Analyzing commits after {last_analyzed_commit[:8]}")
     
     # Analyze each commit for bias (with parallel processing)
     analyzed_commits = []
@@ -457,6 +487,17 @@ def analyze_repository(
     
     # Sort commits back to original order (by date)
     analyzed_commits.sort(key=lambda c: c.get('date', ''))
+    
+    # Merge with cached commits if doing incremental analysis
+    if use_incremental and cached_commits:
+        log_progress(f"Merging {len(analyzed_commits)} new commits with {len(cached_commits)} cached commits")
+        # Convert cached commits back to list format
+        cached_commits_list = list(cached_commits.values())
+        # Combine and sort by date
+        all_commits = cached_commits_list + analyzed_commits
+        all_commits.sort(key=lambda c: c.get('date', ''))
+        analyzed_commits = all_commits
+        log_progress(f"Total commits after merge: {len(analyzed_commits)}")
     
     # Group commits by author
     author_commits = defaultdict(list)
@@ -534,8 +575,8 @@ def analyze_repository(
         'least_biased_authors': list(reversed(author_scorecards[-10:])),  # Bottom 10
     }
     
-    # Save to cache
-    save_cached_analysis(cache_key, repository_path, result)
+    # Save to cache (with individual commit analyses for incremental mode)
+    save_cached_analysis(cache_key, repository_path, result, analyzed_commits)
     
     return result
 

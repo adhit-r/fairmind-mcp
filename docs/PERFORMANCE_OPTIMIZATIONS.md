@@ -6,7 +6,7 @@ FairMind MCP includes several performance optimizations to make repository analy
 
 1. **Caching**: Avoids re-analyzing unchanged repositories
 2. **Parallel Processing**: Analyzes multiple commits simultaneously
-3. **Incremental Analysis**: (Coming soon) Only analyzes new commits
+3. **Incremental Analysis**: Only analyzes new commits since last analysis
 
 ## Caching
 
@@ -146,12 +146,44 @@ Progress is reported in real-time as commits complete:
 
 ## Future Optimizations
 
-### Incremental Analysis (Planned)
+### Incremental Analysis
 
-Only analyze new commits since last analysis:
-- Store last analyzed commit hash
-- Only process commits after that point
-- Merge with cached results
+**How It Works:**
+
+When a repository has been analyzed before, the system automatically detects new commits and only analyzes those:
+
+1. **First Analysis**: Analyzes all commits (normal speed)
+2. **Subsequent Analyses**: 
+   - Detects new commits since last analysis
+   - Only analyzes new commits
+   - Merges results with cached commit analyses
+   - Regenerates author scorecards with combined data
+
+**Benefits:**
+- **First Run**: Normal speed (analyzes all commits)
+- **After New Commits**: Only analyzes new commits (much faster)
+- **Large Repos**: Can save hours on repositories with 1000s of commits
+
+**Example:**
+
+```python
+# First analysis - analyzes all 1000 commits
+result1 = analyze_repository(repo_path, ['gender'])
+# Takes: ~4 minutes (with parallel processing)
+
+# ... new commits are added to repository ...
+
+# Second analysis - only analyzes 5 new commits
+result2 = analyze_repository(repo_path, ['gender'])
+# Takes: ~10 seconds (only 5 new commits analyzed)
+```
+
+**Technical Details:**
+- Stores individual commit analyses in cache
+- Tracks oldest analyzed commit hash
+- Uses `git log {oldest_commit}..HEAD` to get only new commits
+- Merges new commit analyses with cached ones
+- Regenerates author scorecards with complete data
 
 ### Distributed Processing (Future)
 

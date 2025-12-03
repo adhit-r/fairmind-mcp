@@ -89,8 +89,21 @@ def load_cached_analysis(cache_key: str, repository_path: str) -> Optional[Dict[
         return None
 
 
-def save_cached_analysis(cache_key: str, repository_path: str, analysis: Dict[str, Any]) -> None:
-    """Save analysis results to cache."""
+def save_cached_analysis(
+    cache_key: str, 
+    repository_path: str, 
+    analysis: Dict[str, Any],
+    analyzed_commits: Optional[List[Dict[str, Any]]] = None
+) -> None:
+    """
+    Save analysis results to cache.
+    
+    Args:
+        cache_key: Cache key for this analysis
+        repository_path: Path to repository
+        analysis: Final analysis results
+        analyzed_commits: List of analyzed commits (for incremental analysis)
+    """
     cache_path = get_cache_path(cache_key)
     
     current_head = get_last_commit_hash(repository_path)
@@ -101,6 +114,26 @@ def save_cached_analysis(cache_key: str, repository_path: str, analysis: Dict[st
         'analysis': analysis,
     }
     
+    # Store individual commit analyses for incremental mode
+    if analyzed_commits:
+        # Store commit hash -> analysis mapping
+        commit_analyses = {}
+        for commit in analyzed_commits:
+            commit_hash = commit.get('hash')
+            if commit_hash:
+                commit_analyses[commit_hash] = {
+                    'hash': commit_hash,
+                    'date': commit.get('date'),
+                    'author_email': commit.get('author_email'),
+                    'author_name': commit.get('author_name'),
+                    'bias_analysis': commit.get('bias_analysis', {}),
+                }
+        cached_data['commit_analyses'] = commit_analyses
+        # Store the oldest commit hash for incremental analysis
+        if analyzed_commits:
+            # Commits are sorted by date, oldest first
+            cached_data['oldest_commit_hash'] = analyzed_commits[0].get('hash')
+    
     try:
         with open(cache_path, 'w') as f:
             json.dump(cached_data, f, indent=2)
@@ -109,30 +142,41 @@ def save_cached_analysis(cache_key: str, repository_path: str, analysis: Dict[st
         pass
 
 
-def get_analyzed_commits(cache_key: str, repository_path: str) -> Dict[str, Dict[str, Any]]:
+def get_cached_commit_analyses(cache_key: str) -> Dict[str, Dict[str, Any]]:
     """
     Get previously analyzed commits from cache.
     
     Returns:
-    - Dictionary mapping commit hash to analysis result
+    - Dictionary mapping commit hash to commit analysis result
     """
-    cached = load_cached_analysis(cache_key, repository_path)
-    if not cached:
+    cache_path = get_cache_path(cache_key)
+    
+    if not cache_path.exists():
         return {}
     
-    # Extract commit analyses
-    analyzed = {}
-    author_scorecards = cached.get('author_scorecards', [])
+    try:
+        with open(cache_path, 'r') as f:
+            cached = json.load(f)
+        
+        return cached.get('commit_analyses', {})
+    except Exception:
+        return {}
+
+
+def get_last_analyzed_commit_hash(cache_key: str) -> Optional[str]:
+    """Get the hash of the oldest commit that was analyzed (for incremental analysis)."""
+    cache_path = get_cache_path(cache_key)
     
-    # Reconstruct commit analyses from scorecards
-    # Note: This is a simplified reconstruction
-    # Full incremental analysis would require storing individual commit results
-    for scorecard in author_scorecards:
-        author_id = scorecard.get('author_id') or scorecard.get('author_email', '')
-        # We can't fully reconstruct individual commits from scorecards
-        # This is a limitation of the current cache design
+    if not cache_path.exists():
+        return None
     
-    return analyzed
+    try:
+        with open(cache_path, 'r') as f:
+            cached = json.load(f)
+        
+        return cached.get('oldest_commit_hash')
+    except Exception:
+        return None
 
 
 def clear_cache(cache_key: Optional[str] = None) -> None:
