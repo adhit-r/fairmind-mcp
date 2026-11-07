@@ -1,5 +1,11 @@
 # FairMind MCP
 
+> **Archived.** This standalone server is no longer maintained. FairMind's MCP server now lives in the
+> FairMind monorepo at [`apps/mcp`](https://github.com/adhit-r/fairmind/tree/main/apps/mcp). It runs the
+> platform's validated evaluations (drift, leakage, prompt injection, jailbreaks, counterfactual flip
+> rate, agent configuration and more) and stores each result as measured evidence, instead of the local
+> keyword-based scores this repository computed.
+
 FairMind MCP is a Model Context Protocol server that enables AI agents to mathematically verify and self-correct bias in real-time using Green AI principles.
 
 ## Features
